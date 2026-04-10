@@ -1,0 +1,87 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Eval",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#booleans"
+		},
+		{
+			"include": "#logical-operators"
+		},
+		{
+			"include": "#operators"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#variables"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.double-dash.eval",
+					"match": "--.*$"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.eval",
+					"match": "\\b(let|in|lambda|rec|if|then|else)\\b"
+				}
+			]
+		},
+		"booleans": {
+			"patterns": [
+				{
+					"name": "constant.language.boolean.eval",
+					"match": "\\b(true|false)\\b"
+				}
+			]
+		},
+		"logical-operators": {
+			"patterns": [
+				{
+					"name": "keyword.operator.logical.eval",
+					"match": "\\b(and|or|not)\\b"
+				}
+			]
+		},
+		"operators": {
+			"patterns": [
+				{
+					"name": "keyword.operator.eval",
+					"match": "(\\\\s*->|\\\\s*\\\\\\\\|\\+|-|\\*|/|=|%|==|<=|>=|<|>)"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.eval",
+					"match": "\\b[0-9]+\\b"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"name": "variable.other.eval",
+					"match": "\\b[a-zA-Z][a-zA-Z0-9_]*\\b"
+				}
+			]
+		}
+	},
+	
+	"scopeName": "source.eval"
+}

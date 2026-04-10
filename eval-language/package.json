@@ -1,0 +1,25 @@
+{
+  "name": "eval-language",
+  "displayName": "eval-language",
+  "description": "Basic syntax highlighting for .eval files",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.115.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "eval",
+      "aliases": ["Evaluator", "eval"],
+      "extensions": [".eval"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "eval",
+      "scopeName": "source.eval",
+      "path": "./syntaxes/eval.tmLanguage.json"
+    }]
+  }
+}
