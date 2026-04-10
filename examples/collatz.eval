@@ -1,0 +1,10 @@
+-- Counts the number of steps it takes to reach one in the Collatz conjecture
+let rec collatz n =
+  if n == 1
+    then 0
+    else
+      if n % 2 == 0
+        then 1 + collatz(n / 2)
+        else 1 + collatz(n * 3 + 1)
+in
+collatz(1213147)
