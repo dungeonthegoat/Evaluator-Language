@@ -1,0 +1,11 @@
+let nums = [1,4,67,28,49,100,49,12,-30,93]
+in
+let greater = lambda x -> lambda y -> if x > y then x else y
+in
+let rec max lst =
+    match lst with
+    | h :: t -> greater(h)(max(t))
+    | [] -> 0
+    end
+in
+max(nums)
