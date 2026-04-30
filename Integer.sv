@@ -3,183 +3,131 @@ grammar evaluator;
 abstract production numLit
 e::Expr ::= i::Integer
 {
+  e.type = intType();
   e.value = intVal(i);
 }
-
--- Comparisons
 
 abstract production lessThanOp
 e::Expr ::= l::Expr r::Expr
 {
-  l.env = e.env ;
-  r.env = e.env ;
+  propagate env, typeEnv, typeErrors;
 
-  e.value = case l.value of
-    | intVal(lInt) ->
-      case r.value of
-        | intVal(rInt) -> boolVal(lInt < rInt)
-        | _ -> error("Type error: attempted to compare (<) an integer and a non-integer")
-      end
-    | _ -> error("Type error: attempted to compare (<) with a non-integer")
-  end;
+  e.type = boolType();
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '<' must be integers"];
+  e.value = boolVal(getInt(l.value) < getInt(r.value));
 }
 
 abstract production greaterThanOp
 e::Expr ::= l::Expr r::Expr
 {
-  l.env = e.env ;
-  r.env = e.env ;
-  
-  e.value = case l.value of
-    | intVal(lInt) ->
-      case r.value of
-        | intVal(rInt) -> boolVal(lInt > rInt)
-        | _ -> error("Type error: attempted to compare (>) an integer and a non-integer")
-      end
-    | _ -> error("Type error: attempted to compare (>) with a non-integer")
-  end;
+  propagate env, typeEnv, typeErrors;
+
+  e.type = boolType();
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '>' must be integers"];
+  e.value = boolVal(getInt(l.value) > getInt(r.value));
 }
 
 abstract production lessThanEqOp
 e::Expr ::= l::Expr r::Expr
 {
-  l.env = e.env ;
-  r.env = e.env ;
-  
-  e.value = case l.value of
-    | intVal(lInt) ->
-      case r.value of
-        | intVal(rInt) -> boolVal(lInt <= rInt)
-        | _ -> error("Type error: attempted to compare (<=) an integer and a non-integer")
-      end
-    | _ -> error("Type error: attempted to compare (<=) with a non-integer")
-  end;
+  propagate env, typeEnv, typeErrors;
+
+  e.type = boolType();
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '<=' must be integers"];
+  e.value = boolVal(getInt(l.value) <= getInt(r.value));
 }
 
 abstract production greaterThanEqOp
 e::Expr ::= l::Expr r::Expr
 {
-  l.env = e.env ;
-  r.env = e.env ;
-  
-  e.value = case l.value of
-    | intVal(lInt) ->
-      case r.value of
-        | intVal(rInt) -> boolVal(lInt >= rInt)
-        | _ -> error("Type error: attempted to compare (>=) an integer and a non-integer")
-      end
-    | _ -> error("Type error: attempted to compare (>=) with a non-integer")
-  end;
+  propagate env, typeEnv, typeErrors;
+
+  e.type = boolType();
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '>=' must be integers"];
+  e.value = boolVal(getInt(l.value) >= getInt(r.value));
 }
 
--- Operators
-
 abstract production addOp
-sum::Expr ::= l::Expr r::Expr
+e::Expr ::= l::Expr r::Expr
 {
-  l.env = sum.env ;
-  r.env = sum.env ;
-  sum.value = intVal(getInt(l.value) + getInt(r.value)) ;
+  propagate env, typeEnv, typeErrors;
+
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '+' must be integers"];
+  e.type = intType();
+  e.value = intVal(getInt(l.value) + getInt(r.value));
 }
 
 abstract production subOp
-dff::Expr ::= l::Expr r::Expr
+e::Expr ::= l::Expr r::Expr
 {
-  l.env = dff.env ;
-  r.env = dff.env ;
-  dff.value = intVal(getInt(l.value) - getInt(r.value)) ;
+  propagate env, typeEnv, typeErrors;
+
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '-' must be integers"];
+  e.type = intType();
+  e.value = intVal(getInt(l.value) - getInt(r.value));
 }
 
 abstract production mulOp
-mul::Expr ::= l::Expr r::Expr
+e::Expr ::= l::Expr r::Expr
 {
-  l.env = mul.env ;
-  r.env = mul.env ;
-  mul.value = intVal(getInt(l.value) * getInt(r.value)) ;
+  propagate env, typeEnv, typeErrors;
+
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '*' must be integers"];
+  e.type = intType();
+  e.value = intVal(getInt(l.value) * getInt(r.value));
 }
 
 abstract production divOp
-div::Expr ::= l::Expr r::Expr
+e::Expr ::= l::Expr r::Expr
 {
-  l.env = div.env ;
-  r.env = div.env ;
-  div.value = intVal(getInt(l.value) / getInt(r.value)) ;
+  propagate env, typeEnv, typeErrors;
+
+  local typeMatchError :: [String] = if intTypesMatch(l.type, r.type) then [] else ["Both operands of '/' must be integers"];
+  local divByZeroError :: [String] = case r.value of
+    | intVal(0) -> ["Cannot divide by zero"]
+    | _ -> []
+  end;
+  e.typeErrors <- typeMatchError ++ divByZeroError;
+  e.type = intType();
+  e.value = intVal(getInt(l.value) / getInt(r.value)) ;
+}
+
+abstract production powOp
+e::Expr ::= l::Expr r::Expr
+{
+  propagate env, typeEnv, typeErrors;
+
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '^' must be integers"];
+  e.type = intType();
+  e.value = intVal(pow(getInt(l.value), getInt(r.value)));
 }
 
 abstract production modOp
 e::Expr ::= l::Expr r::Expr
 {
-  l.env = e.env ;
-  r.env = e.env ;
-  
-  e.value = case l.value of
-    | intVal(lInt) -> case r.value of
-      | intVal(rInt) -> intVal(lInt - (lInt / rInt) * rInt)
-      | _ -> error("Type error: modulo of non-integer")
-      end
-    | _ -> error("Type error: modulo of non-integer")
-  end;
+  propagate env, typeEnv, typeErrors;
+
+  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '%' must be integers"];
+  e.type = intType();
+  e.value = intVal(getInt(l.value) - (getInt(l.value) / getInt(r.value)) * getInt(r.value));
 }
 
 -- Concrete syntax
 
-concrete production add_c
-add_e::Expr_c ::= e1::Expr_c '+' e2::Expr_c
-{
-    add_e.ast = addOp(e1.ast, e2.ast);
-}
+concrete productions e::Expr_c
+| i::IntLit { e.ast = numLit(toInteger(i.lexeme)); }
+| l::Expr_c '+' r::Expr_c { e.ast = addOp(l.ast, r.ast); }
+| l::Expr_c '-' r::Expr_c { e.ast = subOp(l.ast, r.ast); }
+| l::Expr_c '*' r::Expr_c { e.ast = mulOp(l.ast, r.ast); }
+| l::Expr_c '/' r::Expr_c { e.ast = divOp(l.ast, r.ast); }
+| l::Expr_c '%' r::Expr_c { e.ast = modOp(l.ast, r.ast); }
+| l::Expr_c '^' r::Expr_c { e.ast = powOp(l.ast, r.ast); }
+| l::Expr_c '<' r::Expr_c { e.ast = lessThanOp(l.ast, r.ast); }
+| l::Expr_c '>' r::Expr_c { e.ast = greaterThanOp(l.ast, r.ast); }
+| l::Expr_c '<=' r::Expr_c { e.ast = lessThanEqOp(l.ast, r.ast); }
+| l::Expr_c '>=' r::Expr_c { e.ast = greaterThanEqOp(l.ast, r.ast); }
 
-concrete production sub_c
-sub_e::Expr_c ::= e1::Expr_c '-' e2::Expr_c
-{
-    sub_e.ast = subOp(e1.ast, e2.ast);
-}
-
-concrete production mul_c
-mul_e::Expr_c ::= e1::Expr_c '*' e2::Expr_c
-{
-    mul_e.ast = mulOp(e1.ast, e2.ast);
-}
-
-concrete production div_c
-div_e::Expr_c ::= e1::Expr_c '/' e2::Expr_c
-{
-    div_e.ast = divOp(e1.ast, e2.ast);
-}
-
-concrete production mod_c
-e::Expr_c ::= l::Expr_c Modulo r::Expr_c
-{
-    e.ast = modOp(l.ast, r.ast);
-}
-
--- Comparisons
-
-concrete production lessThan_c
-e::Expr_c ::= l::Expr_c Less r::Expr_c
-{
-    e.ast = lessThanOp(l.ast, r.ast);
-}
-
-concrete production greaterThan_c
-e::Expr_c ::= l::Expr_c Greater r::Expr_c
-{
-    e.ast = greaterThanOp(l.ast, r.ast);
-}
-
-concrete production lessThanEq_c
-e::Expr_c ::= l::Expr_c LessEq r::Expr_c
-{
-    e.ast = lessThanEqOp(l.ast, r.ast);
-}
-
-concrete production greaterThanEq_c
-e::Expr_c ::= l::Expr_c GreaterEq r::Expr_c
-{
-    e.ast = greaterThanEqOp(l.ast, r.ast);
-}
-
--- Functions
+-- Helpful Functions
 
 @{- Gets the integer value of an intVal -}
 function getInt
@@ -187,6 +135,28 @@ Integer ::= v::Value
 {
   return case v of
   | intVal(i) -> i
-  | _ -> error("Type error: expected an integer")
+  | _ -> error("Unexpected error fetching integer value")
+  end;
+}
+
+@{- Returns x^y, assuming y >= 0 -}
+function pow
+Integer ::= x::Integer y::Integer
+{
+  return case y of
+  | y when y <= 0 -> 1
+  | _ -> x * pow(x, y - 1)
+  end;
+}
+
+@{- Determines whether two types should result in a type error during integer operations -}
+function intTypesMatch
+Boolean ::= t1::Type t2::Type
+{
+  return case t1, t2 of
+  | intType(), intType() -> true
+  | errType(), _ -> true
+  | _, errType() -> true
+  | _, _ -> false
   end;
 }

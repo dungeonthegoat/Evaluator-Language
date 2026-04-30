@@ -1,0 +1,30 @@
+dec (x : int) : int = x - 1;
+
+cube (x : int) : int = x ^ 3;
+
+last_digit (x : int) : int = x % 10;
+
+sum (l : [int]) : int = ? l {
+  | [] -> 0
+  | h::t -> h + sum.t
+};
+
+product (l : [int]) : int = ? l {
+    | [] -> 1
+    | h::t -> h * product.t
+};
+
+all_odds (l : [int]) : [int] = ? l {
+    | [] -> []
+    | h::t -> 
+      if h % 2 == 0
+      then all_odds.t
+      else h::all_odds.t
+};
+
+square_all (l : [int]) : [int] = ? l {
+    | [] -> []
+    | h::t -> (h^2)::(square_all.t)
+};
+
+square_all.[1,2,3,4,5]

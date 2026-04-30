@@ -1,0 +1,51 @@
+first_digit (x : int) : int = 
+  if x < 10
+  then x
+  else first_digit.(x/10);
+
+product_to (x : int) : int =
+  if x == 0
+  then 0
+  else 
+    if x == 1
+    then 1
+    else x * product_to.(x-1);
+
+
+is_prime_helper (x : int) (y : int) : bool =
+  if y <= 1
+  then true
+  else
+    if x % y == 0
+    then false
+    else is_prime_helper.x.(y-1);
+
+is_prime (x : int) : bool = 
+  if x <= 1 
+  then false 
+  else is_prime_helper.x.(x - 1);
+
+last_digits (l : [int]) : [int] = ? l {
+  | [] -> []
+  | h::t -> (h%10)::last_digits.t
+};
+
+all_primes (l : [int]) : [int] = ? l {
+    | [] -> []
+    | h::t -> 
+      if is_prime.h
+      then h::all_primes.t
+      else all_primes.t
+};
+
+sum (l : [int]) : int = ? l {
+  | [] -> 0
+  | h::t -> h + sum.t
+};
+
+sum_pairs (l : [[int]]) : int = ? l {
+  | [] -> 0
+  | h::t -> sum.h + sum_pairs.t
+};
+
+sum_pairs

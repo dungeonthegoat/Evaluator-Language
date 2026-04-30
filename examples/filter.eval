@@ -1,14 +1,9 @@
-let rec filter lst = lambda f ->
-    match lst with
-    | [] -> []
-    | h :: t ->
-        if f(h) 
-            then h::(filter(t)(f))
-            else filter(t)(f)
-    end
-in
-let nums = [1,4,5,9,20,43,44,49,52]
-in
-let is_even = lambda x -> x % 2 == 0
-in
-filter(nums)(is_even)
+filter (l : [any]) (f : (any -> bool)) : [any] = ? l {
+  | [] -> []
+  | h::t -> if f.h
+    then h::(filter.t.f)
+    else filter.t.f
+};
+nums = [1,2,3,4,5];
+is_even (x : int) : bool = x % 2 == 0;
+filter.nums.is_even

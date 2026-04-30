@@ -7,6 +7,7 @@ lexer class KEYWORDS;
 
 -- Arithmetic
 
+terminal Pow   '^'      precedence = 14, association = right;
 terminal Star   '*'     precedence = 12, association = left;
 terminal Slash  '/'     precedence = 12, association = left;
 terminal Modulo '%'     precedence = 12, association = left;
@@ -19,7 +20,16 @@ terminal ConsOp '::'        precedence = 9, association = right;
 terminal Append '@'         precedence = 9, association = right;
 terminal LeftBracket '['    precedence = 8, association = left;
 terminal RightBracket ']'   precedence = 8, association = left;
+terminal Sep ','            precedence = 2, association = left;
+terminal Dots '...'         precedence = 2, association = left;
+
+-- Pattern Matching
+
+terminal Case '?'           precedence = 2, association = left;
+terminal Arrow     '->'     precedence = 2, association = right;
 terminal Bar '|'            precedence = 8, association = left;
+terminal LeftBrace '{'      precedence = 15, association = left;
+terminal RightBrace '}'     precedence = 15, association = left;
 
 -- Comparisons
 
@@ -35,21 +45,23 @@ terminal Not    '!'     precedence = 8, association = left, lexer classes {KEYWO
 terminal And    '&&'    precedence = 5, association = left, lexer classes {KEYWORDS};
 terminal Or     '||'    precedence = 4, association = left, lexer classes {KEYWORDS};
 
+-- Lambda & Binding
+
+terminal Lambda 'lambda'    precedence = 2, association = right, lexer classes {KEYWORDS};
+terminal Colon  ':'         precedence = 2, association = left;
+terminal Eq     '='         precedence = 2, association = left;
+terminal In     ';'         precedence = 2, association = left;
+terminal App '.'            precedence = 20, association = left;
+
 -- Keywords
 
-terminal Eq     '='             precedence = 2, association = left;
-terminal In     'in'            precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal Let    'let'           precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal Rec    'rec'           precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal If     'if'            precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal Then   'then'          precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal Else   'else'          precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal LambdaParam 'lambda'   precedence = 2, association = right,    lexer classes {KEYWORDS};
-terminal Arrow     '->'         precedence = 2, association = right;
-terminal Match 'match'          precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal With 'with'            precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal End 'end'              precedence = 2, association = left,     lexer classes {KEYWORDS};
-terminal Sep ','                precedence = 2, association = left;
+terminal If     'if'          precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal Then   'then'        precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal Else   'else'        precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal IntT   'int'         precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal BoolT  'bool'        precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal AnyT   'any'         precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal ADT    'type'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 
 -- Value Literals
 

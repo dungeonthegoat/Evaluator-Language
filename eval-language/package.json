@@ -2,7 +2,7 @@
   "name": "eval-language",
   "displayName": "eval-language",
   "description": "Basic syntax highlighting for .eval files",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.115.0"
   },
@@ -10,12 +10,27 @@
     "Programming Languages"
   ],
   "contributes": {
-    "languages": [{
-      "id": "eval",
-      "aliases": ["Evaluator", "eval"],
-      "extensions": [".eval"],
-      "configuration": "./language-configuration.json"
-    }],
+    "languages": [
+      {
+        "id": "eval",
+        "aliases": ["Eval", "eval"],
+        "extensions": [".eval"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/eval.svg",
+          "dark": "./icons/eval.svg"
+        }
+      },
+      {
+        "id": "silver",
+        "aliases": ["Silver", "silver"],
+        "extensions": [".sv"],
+        "icon": {
+          "light": "./icons/melt.svg",
+          "dark": "./icons/melt.svg"
+        }
+      }
+    ],
     "grammars": [{
       "language": "eval",
       "scopeName": "source.eval",
