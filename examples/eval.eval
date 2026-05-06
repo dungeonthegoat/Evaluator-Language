@@ -1,53 +1,95 @@
 type Val = IntVal(int)
+         | BoolVal(bool)
          | ClosureVal(int, Expr, [(int, Val)])
          | ErrorVal(int);
 
 type Expr = Add(Expr, Expr)
           | Mul(Expr, Expr)
+          | Mod(Expr, Expr)
           | Let(int, Expr, Expr)
           | Var(int)
           | Num(int)
-          | Lambda(int, Expr, Expr);
+          | Bool(bool)
+          | Eq(Expr, Expr)
+          | IfThenElse(Expr, Expr, Expr)
+          | Lambda(int, Expr)
+          | App(Expr, Expr);
 
 let Val lookup int id [(int, Val)] env = ? env {
-  | [] -> ErrorVal(-1) -- Error value
+  | [] -> ErrorVal (-1) -- Error value
   | (n, val)::rest ->
     if n == id
     then val
     else lookup id rest
 };
 
-let Val eval Expr e [(int, Val)] env = ? e {
-  ----------------
+let Val evalRec Expr e [(int, Val)] env = ? e {
   -- ARITHMETIC --
-  ----------------
-  | Num(i) -> IntVal i
-  | Add(l, r) -> ? eval l env {
-    | IntVal(li) -> ? eval r env {
-      | IntVal(ri) -> IntVal(li + ri)
-      | _ -> ErrorVal(-1)
-      }
-    | _ -> ErrorVal(-1)
-    }
-  | Mul(l, r) -> ? eval l env {
-    | IntVal(li) -> ? eval r env {
-      | IntVal(ri) -> IntVal(li * ri)
-      | _ -> ErrorVal(-1)
-      }
-    | _ -> ErrorVal(-1)
-    }
-  
 
-  -------------
-  -- BINDING --
-  -------------
-  | Let(id, v, e) -> eval e ((id, (eval v env))::env)
+  | Num(i) -> IntVal i
+  | Add(l, r) -> ? evalRec l env {
+    | IntVal(li) -> ? evalRec r env {
+      | IntVal(ri) -> IntVal(li + ri)
+      | _ -> ErrorVal (-1)
+      }
+    | _ -> ErrorVal (-1)
+    }
+  | Mul(l, r) -> ? evalRec l env {
+    | IntVal(li) -> ? evalRec r env {
+      | IntVal(ri) -> IntVal(li * ri)
+      | _ -> ErrorVal (-1)
+      }
+    | _ -> ErrorVal (-1)
+    }
+  | Mod(l, r) -> ? evalRec l env {
+    | IntVal(li) -> ? evalRec r env {
+      | IntVal(ri) -> IntVal(li % ri)
+      | _ -> ErrorVal (-1)
+      }
+    | _ -> ErrorVal (-1)
+    }
+
+  -- BOOLEAN --
+
+  | Bool(b) -> BoolVal b
+  | Eq(l, r) -> ? evalRec l env {
+    | IntVal(li) -> ? evalRec r env {
+      | IntVal(ri) -> BoolVal (li == ri)
+      | _ -> ErrorVal (-1)
+      }
+    | _ -> ErrorVal (-1)
+    }
+  | IfThenElse(cond, e1, e2) -> ? evalRec cond env {
+    | BoolVal(b) ->
+      if b
+      then evalRec e1 env
+      else evalRec e2 env
+    | _ -> ErrorVal (-1)
+    }
+
+  -- LET BINDING --
+
+  | Let(id, v, e) -> evalRec e ((id, (evalRec v env))::env)
   | Var(id) -> lookup id env
 
-
-  ------------
   -- LAMBDA --
-  ------------
+
+  | Lambda(param, body) -> ClosureVal param body env
+  | App(func, e) -> ? evalRec func env {
+    | ClosureVal(param, body, fEnv) -> evalRec body ((param, evalRec e env)::(env @ fEnv))
+    | _ -> ErrorVal(-1)
+    }
 };
 
-eval (Let 0 (Add (Num 1) (Num 2)) (Add (Num 1) (Var 0))) []
+let Val eval Expr e = evalRec e [];
+
+-- EVALUATION --
+
+-- IsEven() Function:
+eval
+(
+  Let (-1) (Num 5)                              -- Let '-1' = 5 in
+  (Let 0                                        -- Let '0' = 
+  (Lambda 1 (Eq (Mod (Var 1) (Num 2)) (Num 0))) --  (λ'1' -> '1' % 2 == 0) in
+  (App (Var 0) (Var (-1))))                     -- '0'(4)
+)
