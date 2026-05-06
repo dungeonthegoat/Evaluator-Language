@@ -76,20 +76,55 @@ let Val evalRec Expr e [(int, Val)] env = ? e {
 
   | Lambda(param, body) -> ClosureVal param body env
   | App(func, e) -> ? evalRec func env {
-    | ClosureVal(param, body, fEnv) -> evalRec body ((param, evalRec e env)::(env @ fEnv))
+    | ClosureVal(param, body, fEnv) -> evalRec body ((param, evalRec e env)::fEnv)
     | _ -> ErrorVal(-1)
     }
 };
 
 let Val eval Expr e = evalRec e [];
 
--- EVALUATION --
+-------------------------------------------------------------------------------
 
--- IsEven() Function:
+---- IS EVEN ----
+-- eval
+-- (
+--   Let (-1) (Num 5)                              -- Let '-1' = 5 in
+--   (Let 0                                        -- Let '0' = 
+--   (Lambda 1 (Eq (Mod (Var 1) (Num 2)) (Num 0))) --  (λ'1' -> '1' % 2 == 0) in
+--   (App (Var 0) (Var (-1))))                     -- '0'(4)
+-- )
+
+---- FACTORIAL (pretty) ----
+-- eval
+-- ( Let 1 (Num 10) -- We are taking a!
+
+-- ( Let 26 -- Defining the Z-Combinator (since this uses eager evaluation)
+--   (
+--     Lambda 6 (
+--       App (Lambda 24 (App (Var 6) (Lambda 22 (App (App (Var 24) (Var 24)) (Var 22)))))
+--           (Lambda 24 (App (Var 6) (Lambda 22 (App (App (Var 24) (Var 24)) (Var 22)))))
+--     )
+--   )
+
+--   -- Defining factorial
+--   (
+--     Let 0
+--     (
+--       Lambda 6 (Lambda 14 (
+--         IfThenElse (Eq (Var 14) (Num 0)) 
+--           (Num 1) 
+--           (Mul (Var 14) (App (Var 6) (Add (Var 14) (Num (-1)))))
+--       ))
+--     )
+
+--     -- Apply the Z-Combinator to factorial
+--     (App (App (Var 26) (Var 0)) (Var 1))
+-- )))
+
+---- FACTORIAL (only lambda calculus) -----
 eval
-(
-  Let (-1) (Num 5)                              -- Let '-1' = 5 in
-  (Let 0                                        -- Let '0' = 
-  (Lambda 1 (Eq (Mod (Var 1) (Num 2)) (Num 0))) --  (λ'1' -> '1' % 2 == 0) in
-  (App (Var 0) (Var (-1))))                     -- '0'(4)
-)
+
+(((App (App (Lambda 6 (App (Lambda 24 (App (Var 6) (Lambda 22 (App (App (Var 24) (Var 24)) (Var 22)))))
+(Lambda 24 (App (Var 6) (Lambda 22 (App (App (Var 24) (Var 24)) (Var 22)))))))
+(Lambda 6 (Lambda 14 (IfThenElse (Eq (Var 14) (Num 0)) (Num 1) 
+(Mul (Var 14) (App (Var 6) (Add (Var 14) (Num (-1))))))))) (Num 10))))
