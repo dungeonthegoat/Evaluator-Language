@@ -51,7 +51,6 @@ terminal Lambda 'lambda'    precedence = 2, association = right, lexer classes {
 terminal Colon  ':'         precedence = 2, association = left;
 terminal Eq     '='         precedence = 2, association = left;
 terminal In     ';'         precedence = 2, association = left;
-terminal App '.'            precedence = 20, association = left;
 
 -- Keywords
 
@@ -59,9 +58,11 @@ terminal If     'if'          precedence = 2, association = left,     lexer clas
 terminal Then   'then'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal Else   'else'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal IntT   'int'         precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal FloatT 'float'       precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal BoolT  'bool'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal AnyT   'any'         precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal ADT    'type'        precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal Let    'let'         precedence = 2, association = left,     lexer classes {KEYWORDS};
 
 -- Value Literals
 
@@ -69,7 +70,8 @@ terminal True   'true'  lexer classes {KEYWORDS};
 terminal False  'false' lexer classes {KEYWORDS};
 terminal Var  /[a-z_][a-zA-Z0-9_]*/ submits to {KEYWORDS};
 terminal TypeName  /[A-Z][a-zA-Z0-9_]*/ submits to {KEYWORDS};
-terminal IntLit /-?[0-9]+/;
+terminal IntLitT /(0|[1-9][0-9]*)/;
+terminal FloatLitT /[0-9]+\.[0-9]+/;
 
 -- Other
 

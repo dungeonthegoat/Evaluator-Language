@@ -163,6 +163,8 @@ p::Pattern ::= typeName::String ps::[Pattern]
     | _ -> []
     end;
   
+  -- Decorate the list of patterns with their associated values and types to match with
+  -- This is so that later on we can evaluate whether every pattern matched by folding them
   local decoratedPats :: [Decorated Pattern] = decoratePatternsWithValues(ps, vals, p.typeEnv);
   local decoratedTypePats :: [Decorated Pattern] = decoratePatternsWithTypes(ps, argTypes, p.typeEnv);
 
@@ -192,11 +194,11 @@ nonterminal Pat_c with ast_p;
 synthesized attribute ast_p :: Pattern;
 
 concrete productions p::Pat_c
-| '[' ']' { p.ast_p = emptyListPat(); }
-| h::Pat_c '::' t::Pat_c { p.ast_p = consPat(h.ast_p, t.ast_p); }
+| LeftBracket RightBracket { p.ast_p = emptyListPat(); }
+| h::Pat_c ConsOp t::Pat_c { p.ast_p = consPat(h.ast_p, t.ast_p); }
 | v::Var { p.ast_p = varPat(v.lexeme); }
-| '(' l::Pat_c ',' r::Pat_c ')' { p.ast_p = tuplePat(l.ast_p, r.ast_p); }
-| v::TypeName '(' ps::PatList_c ')' { p.ast_p = customPat(v.lexeme, ps.pats); }
+| LeftParen l::Pat_c Sep r::Pat_c RightParen { p.ast_p = tuplePat(l.ast_p, r.ast_p); }
+| v::TypeName LeftParen ps::PatList_c RightParen { p.ast_p = customPat(v.lexeme, ps.pats); }
 
 nonterminal PatList_c with pats;
 synthesized attribute pats :: [Pattern];

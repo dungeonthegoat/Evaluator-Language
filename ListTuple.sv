@@ -56,31 +56,26 @@ e::Expr ::= l::Expr r::Expr
   end;
 }
 
+abstract production tupleExpr
+e::Expr ::= l::Expr r::Expr
+{
+  propagate env, typeEnv, typeErrors;
+
+  e.type = tupleType(l.type, r.type);
+  e.value = tupleVal(l.value, r.value);
+}
+
 -- Concrete syntax
 
-concrete production emptyList_c
-e::Expr_c ::= '[' ']'
-{
-  e.ast = emptyExpr();
-}
+concrete productions t::Term_c
+| LeftBracket RightBracket { t.ast = emptyExpr(); }
+| LeftBracket list::ExprList_c RightBracket { t.ast = list.ast_ExprList; }
+| LeftBracket l::Expr_c Dots r::Expr_c RightBracket { t.ast = listCompExpr(l.ast, r.ast); }
+| LeftParen l::Expr_c Sep r::Expr_c RightParen { t.ast = tupleExpr(l.ast, r.ast); }
 
-concrete production cons_c
-e::Expr_c ::= h::Expr_c ConsOp t::Expr_c
-{
-  e.ast = consExpr(h.ast, t.ast);
-}
-
-concrete production append_c
-e::Expr_c ::= l::Expr_c Append r::Expr_c
-{
-  e.ast = appendExpr(l.ast, r.ast);
-}
-
-concrete production listComp_c
-e::Expr_c ::= '[' l::Expr_c Dots r::Expr_c ']'
-{
-  e.ast = listCompExpr(l.ast, r.ast);
-}
+concrete productions e::Expr_c
+| hd::Expr_c ConsOp tl::Expr_c { e.ast = consExpr(hd.ast, tl.ast); }
+| l::Expr_c Append r::Expr_c { e.ast = appendExpr(l.ast, r.ast); }
 
 nonterminal ExprList_c with ast_ExprList;
 synthesized attribute ast_ExprList :: Expr;
@@ -95,12 +90,6 @@ concrete production multiExprList_c
 es::ExprList_c ::= e::Expr_c Sep rest::ExprList_c
 {
   es.ast_ExprList = consExpr(e.ast, rest.ast_ExprList);
-}
-
-concrete production list_c
-e::Expr_c ::= '[' list::ExprList_c ']'
-{
-  e.ast = list.ast_ExprList;
 }
 
 -- Functions

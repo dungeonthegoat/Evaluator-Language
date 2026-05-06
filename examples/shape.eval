@@ -1,0 +1,10 @@
+type Shape = Rect(float, float) | Circ(float);
+
+let pi = 3.14159265359;
+
+let float area Shape shape = ? shape {
+  | Rect(l, w) -> l * w
+  | Circ(r) -> pi * r * r
+};
+
+area (Rect 4.0 2.0) + area (Circ 2.0) -- Should be ~20.5663706144

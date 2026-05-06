@@ -52,8 +52,27 @@ e::Expr ::= name::String args::[Expr] typeName::String
 
 -- Concrete syntax
 
+@@{-
+  - Concrete syntazx evaluation is split up into three main precedence levels:
+  - 1. Expr_c (lowest precedence) (everything else)
+  - 2. App_c  (middle precedence) (function application)
+  - 3. Term_c (highest precedence) (irreducible values like literals)
+
+  - An Expr_c or App_c can also be a Term_c, but not the other way around
+  - A function can only apply from an App_c onto a Term_c (this results in a new App_c)
+    - Example: add 1 2
+    You can attempt to evaluate it as add (1 2), where 1 gets lifted from a
+    Term_c to an App_c. However, by doing so, you would be left with
+
+                          add::App_c (1 2)::App_c
+    
+    which is not a concrete production. Therefore, it must be evaluated in
+    a left-associative way.
+-}
+
 nonterminal Root_c with astRoot;
 nonterminal Expr_c with ast;
+nonterminal Term_c with ast;
 
 synthesized attribute astRoot::Root;
 synthesized attribute ast::Expr;
@@ -64,10 +83,14 @@ r::Root_c ::= e::Expr_c
   r.astRoot = root(e.ast); 
 }
 
+concrete productions e::Expr_c
+| a::App_c { e.ast = a.ast; }
+| If c::Expr_c Then e1::Expr_c Else e2::Expr_c { e.ast = ifThenElse(c.ast, e1.ast, e2.ast); }
+
 concrete production paren_c
-e::Expr_c ::= '(' e1::Expr_c ')'
+t::Term_c ::= LeftParen e::Expr_c RightParen
 {
-  e.ast = e1.ast;
+  t.ast = e.ast;
 }
 
 concrete production type_declaration_c
@@ -81,13 +104,13 @@ synthesized attribute types :: [Type];
 
 concrete productions t::TypeList_c
 | t1::Type_c { t.types = [t1.type_ast]; }
-| t1::Type_c ',' ts::TypeList_c { t.types = t1.type_ast :: ts.types; }
+| t1::Type_c Sep ts::TypeList_c { t.types = t1.type_ast :: ts.types; }
 
 nonterminal Constr_c with type_name, types;
 synthesized attribute type_name :: String;
 
 concrete production constr_c
-c::Constr_c ::= name::TypeName '(' ts::TypeList_c ')'
+c::Constr_c ::= name::TypeName LeftParen ts::TypeList_c RightParen
 {
   c.type_name = name.lexeme;
   c.types = ts.types;

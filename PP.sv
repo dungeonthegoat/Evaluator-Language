@@ -17,11 +17,13 @@ aspect pp on Expr of
 | lambda(p, pt, b) -> "(λ" ++ p ++ ":" ++ toStringType(^pt) ++ " → " ++ b.pp ++ ")"
 | app(f, a) -> f.pp ++ "(" ++ a.pp ++ ")"
 -- Integer
-| numLit(i) -> toString(i)
+| intLit(i) -> toString(i)
+| floatLit(i) -> toString(i) ++ "f"
 | lessThanOp(l, r) -> "(" ++ l.pp ++ " < " ++ r.pp ++ ")"
 | greaterThanOp(l, r) -> "(" ++ l.pp ++ " > " ++ r.pp ++ ")"
 | lessThanEqOp(l, r) -> "(" ++ l.pp ++ " <= " ++ r.pp ++ ")"
 | greaterThanEqOp(l, r) -> "(" ++ l.pp ++ " >= " ++ r.pp ++ ")"
+| negOp(e) -> "-" ++ e.pp
 | addOp(l, r) -> "(" ++ l.pp ++ " + " ++ r.pp ++ ")"
 | subOp(l, r) -> "(" ++ l.pp ++ " - " ++ r.pp ++ ")"
 | mulOp(l, r) -> "(" ++ l.pp ++ " * " ++ r.pp ++ ")"

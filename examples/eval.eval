@@ -1,0 +1,53 @@
+type Val = IntVal(int)
+         | ClosureVal(int, Expr, [(int, Val)])
+         | ErrorVal(int);
+
+type Expr = Add(Expr, Expr)
+          | Mul(Expr, Expr)
+          | Let(int, Expr, Expr)
+          | Var(int)
+          | Num(int)
+          | Lambda(int, Expr, Expr);
+
+let Val lookup int id [(int, Val)] env = ? env {
+  | [] -> ErrorVal(-1) -- Error value
+  | (n, val)::rest ->
+    if n == id
+    then val
+    else lookup id rest
+};
+
+let Val eval Expr e [(int, Val)] env = ? e {
+  ----------------
+  -- ARITHMETIC --
+  ----------------
+  | Num(i) -> IntVal i
+  | Add(l, r) -> ? eval l env {
+    | IntVal(li) -> ? eval r env {
+      | IntVal(ri) -> IntVal(li + ri)
+      | _ -> ErrorVal(-1)
+      }
+    | _ -> ErrorVal(-1)
+    }
+  | Mul(l, r) -> ? eval l env {
+    | IntVal(li) -> ? eval r env {
+      | IntVal(ri) -> IntVal(li * ri)
+      | _ -> ErrorVal(-1)
+      }
+    | _ -> ErrorVal(-1)
+    }
+  
+
+  -------------
+  -- BINDING --
+  -------------
+  | Let(id, v, e) -> eval e ((id, (eval v env))::env)
+  | Var(id) -> lookup id env
+
+
+  ------------
+  -- LAMBDA --
+  ------------
+};
+
+eval (Let 0 (Add (Num 1) (Num 2)) (Add (Num 1) (Var 0))) []

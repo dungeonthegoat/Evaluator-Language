@@ -124,47 +124,15 @@ e::Expr ::= b::Expr
 
 -- Concrete syntax
 
-concrete production true_c
-e::Expr_c ::= True
-{
-  e.ast = boolLit(true);
-}
+concrete productions t::Term_c
+| True { t.ast = boolLit(true); }
+| False { t.ast = boolLit(false); }
 
-concrete production false_c
-e::Expr_c ::= False
-{
-  e.ast = boolLit(false);
-}
-
-concrete production eqOp_c
-e::Expr_c ::= e1::Expr_c EqOp e2::Expr_c
-{
-  e.ast = eqOp(e1.ast, e2.ast);
-}
-
-concrete production ifThenElse_c
-e::Expr_c ::= If b::Expr_c Then v1::Expr_c Else v2::Expr_c
-{
-  e.ast = ifThenElse(b.ast, v1.ast, v2.ast);
-}
-
-concrete production not_c
-e::Expr_c ::= Not b::Expr_c
-{
-  e.ast = notOp(b.ast);
-}
-
-concrete production and_c
-e::Expr_c ::= l::Expr_c And r::Expr_c
-{
-  e.ast = andOp(l.ast, r.ast);
-}
-
-concrete production or_c
-e::Expr_c ::= l::Expr_c Or r::Expr_c
-{
-  e.ast = orOp(l.ast, r.ast);
-}
+concrete productions e::Expr_c
+| Not e1::Expr_c { e.ast = notOp(e1.ast); }
+| l::Expr_c EqOp r::Expr_c { e.ast = eqOp(l.ast, r.ast); }
+| l::Expr_c And r::Expr_c { e.ast = andOp(l.ast, r.ast); }
+| l::Expr_c Or r::Expr_c { e.ast = orOp(l.ast, r.ast); }
 
 -- Functions
 

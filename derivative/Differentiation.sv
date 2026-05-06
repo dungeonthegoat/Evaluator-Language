@@ -14,17 +14,17 @@ aspect production divOp e::Expr ::= l::Expr r::Expr { propagate differential; }
 aspect production powOp e::Expr ::= l::Expr r::Expr { propagate differential; }
 
 aspect derivative on e::Expr of
-| numLit(_) -> numLit(0)
+| intLit(_) -> intLit(0)
 | addOp(l, r) -> addOp(l.derivative, r.derivative)
 | subOp(l, r) -> subOp(l.derivative, r.derivative)
 | mulOp(l, r) -> addOp(mulOp(^l, r.derivative), mulOp(^r, l.derivative))
-| divOp(l, r) -> divOp(subOp(mulOp(l.derivative, ^r), mulOp(^l, r.derivative)), powOp(^r, numLit(2)))
-| powOp(l, r) -> mulOp(mulOp(^r, powOp(^l, numLit(getInt(r.value) - 1))), l.derivative)
+| divOp(l, r) -> divOp(subOp(mulOp(l.derivative, ^r), mulOp(^l, r.derivative)), powOp(^r, intLit(2)))
+| powOp(l, r) -> mulOp(mulOp(^r, powOp(^l, intLit(getInt(r.value) - 1))), l.derivative)
 | var(name) -> 
   if name == e.differential
-  then numLit(1)
-  else numLit(0)
-| _ -> numLit(0)
+  then intLit(1)
+  else intLit(0)
+| _ -> intLit(0)
 end;
 
 abstract production primeOp

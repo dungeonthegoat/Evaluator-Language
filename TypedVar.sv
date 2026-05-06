@@ -1,11 +1,10 @@
 grammar evaluator;
 
--- A variable with type annotations, such as (x : int) or (f : ([int] -> bool))
 nonterminal TypedVar_c with name, type_ast;
 synthesized attribute name :: String;
 
 concrete production typedVar_c
-tv::TypedVar_c ::= '(' v::Var Colon t::Type_c ')'
+tv::TypedVar_c ::= t::Type_c v::Var
 {
   tv.name = v.lexeme;
   tv.type_ast = t.type_ast;

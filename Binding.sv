@@ -30,19 +30,19 @@ e::Expr ::= name::String e1::Expr e2::Expr
 -- Concrete syntax
 
 concrete production constr_var_c
-e::Expr_c ::= name::TypeName
+t::Term_c ::= name::TypeName
 {
-  e.ast = var(name.lexeme);
+  t.ast = var(name.lexeme);
 }
 
 concrete production var_c
-e::Expr_c ::= name::Var
+t::Term_c ::= name::Var
 {
-  e.ast = var(name.lexeme);
+  t.ast = var(name.lexeme);
 }
 
 concrete production let_c
-let_e::Expr_c ::= var::Var Eq e1::Expr_c In e2::Expr_c
+let_e::Expr_c ::= Let var::Var Eq e1::Expr_c In e2::Expr_c
 {
   let_e.ast = letExpr(var.lexeme, e1.ast, e2.ast);
 }

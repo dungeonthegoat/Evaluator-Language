@@ -1,0 +1,9 @@
+type Vector2 = Vector2(float, float);
+
+let Vector2 add Vector2 v1 Vector2 v2 = ? v1 {
+  | Vector2(x1, y1) -> ? v2 {
+    | Vector2(x2, y2) -> Vector2 (x1 + x2) (y1 + y2)
+  }
+};
+
+add (Vector2 4.0 1.0) (Vector2 1.0 2.0) -- Returns Vector2 5.0 3.0

@@ -20,6 +20,10 @@ abstract production intVal
 v::Value ::= i::Integer
 {}
 
+abstract production floatVal
+v::Value ::= f::Float
+{}
+
 abstract production closureVal
 v::Value ::= param::String body::Expr env::[Pair<String Value>]
 {}
@@ -49,6 +53,7 @@ String ::= v::Value
 {
   return case v of
   | intVal(i) -> toString(i)
+  | floatVal(f) -> toString(f)
   | closureVal(p, _, _) -> "Closure of " ++ p
   | recClosureVal(f, p, _, _) -> "Recursive closure " ++ f ++ " of " ++ p
   | boolVal(b) -> toString(b)
@@ -80,6 +85,9 @@ Boolean ::= l::Value r::Value
 {
   return case l, r of
   | intVal(v1), intVal(v2) -> v1 == v2
+  | floatVal(v1), floatVal(v2) -> v1 == v2
+  | floatVal(v1), intVal(v2) -> v1 == toFloat(v2)
+  | intVal(v1), floatVal(v2) -> toFloat(v1) == v2
   | boolVal(v1), boolVal(v2) -> v1 == v2
   | emptyListVal(), emptyListVal() -> true
   | consVal(h1, t1), consVal(h2, t2) -> equalsValue(^h1, ^h2) && equalsValue(^t1, ^t2)

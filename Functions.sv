@@ -62,7 +62,12 @@ e::Expr ::= func::Expr arg::Expr
   local argMatchParamError :: [String] =
     if equalsType(arg.type, ^paramType) || (equalsType(arg.type, errType()))
     then []
-    else ["Argument type does not match expected parameter type"];
+    else [
+          "Argument type " ++
+          toStringType(arg.type) ++
+          " does not match expected parameter type " ++
+          toStringType(^paramType)
+        ];
   
   local param :: String = case func.value of
   | closureVal(p, _, _) -> p
@@ -119,7 +124,7 @@ e::Expr_c ::= Lambda param::Var Colon t::Type_c Arrow body::Expr_c
 }
 
 concrete production func
-e::Expr_c ::= name::Var params::TypedVarList_c Colon retT::Type_c Eq body::Expr_c In rest::Expr_c
+e::Expr_c ::= Let retT::Type_c name::Var params::TypedVarList_c Eq body::Expr_c In rest::Expr_c
 {
   e.ast = letRecExpr(
     name.lexeme, 
@@ -131,11 +136,11 @@ e::Expr_c ::= name::Var params::TypedVarList_c Colon retT::Type_c Eq body::Expr_
   );
 }
 
-concrete production app_c
-e::Expr_c ::= f::Expr_c App a::Expr_c
-{
-  e.ast = app(f.ast, a.ast);
-}
+nonterminal App_c with ast;
+
+concrete productions a::App_c
+| t::Term_c { a.ast = t.ast; }
+| f::App_c t::Term_c { a.ast = app(f.ast, t.ast); }
 
 -- Functions
 

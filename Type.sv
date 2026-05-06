@@ -6,6 +6,10 @@ abstract production intType
 t::Type ::=
 {}
 
+abstract production floatType
+t::Type ::=
+{}
+
 abstract production boolType
 t::Type ::=
 {}
@@ -41,12 +45,13 @@ synthesized attribute type_ast :: Type;
 
 concrete productions t::Type_c
 | IntT { t.type_ast = intType(); }
+| FloatT { t.type_ast = floatType(); }
 | BoolT { t.type_ast = boolType(); }
 | AnyT { t.type_ast = anyType(); }
-| '[' t1::Type_c ']' { t.type_ast = listType(t1.type_ast); }
-| '(' p::Type_c Arrow r::Type_c ')' { t.type_ast = funcType(p.type_ast, r.type_ast); }
-| '(' t1::Type_c ')' { t.type_ast = t1.type_ast; }
-| '(' l::Type_c ',' r::Type_c ')' { t.type_ast = tupleType(l.type_ast, r.type_ast); }
+| LeftBracket t1::Type_c RightBracket { t.type_ast = listType(t1.type_ast); }
+| LeftParen p::Type_c Arrow r::Type_c RightParen { t.type_ast = funcType(p.type_ast, r.type_ast); }
+| LeftParen t1::Type_c RightParen { t.type_ast = t1.type_ast; }
+| LeftParen l::Type_c Sep r::Type_c RightParen { t.type_ast = tupleType(l.type_ast, r.type_ast); }
 | v::TypeName { t.type_ast = customType(v.lexeme); }
 
 -- Functions
@@ -59,6 +64,11 @@ Boolean ::= t1::Type t2::Type
   | intType() -> case t2 of
     | anyType() -> true
     | intType() -> true
+    | _ -> false
+    end
+  | floatType() -> case t2 of
+    | anyType() -> true
+    | floatType() -> true
     | _ -> false
     end
   | boolType() -> case t2 of
@@ -101,6 +111,7 @@ String ::= t::Type
 {
   return case t of
   | intType() -> "int"
+  | floatType() -> "float"
   | boolType() -> "bool"
   | errType() -> "error"
   | listType(innerT) -> "[" ++ toStringType(^innerT) ++ "]"

@@ -1,8 +1,0 @@
-type Shape = Rect(int, int) | Circ(int);
-
-area (s : Shape) : int = ? s {
-  | Rect(l, w) -> l * w
-  | Circ(r) -> 3 * r ^ 2
-};
-
-area.(Rect.4.2) + area.(Circ.2)
