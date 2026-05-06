@@ -1,4 +1,4 @@
-grammar evaluator ;
+grammar evaluator;
 
 parser parse :: Root_c
 {
@@ -29,9 +29,9 @@ IO<Integer> ::= args::[String]
           return 1;
         } 
         else do {
-          print("Value: " ++ toStringValue(r_ast.value) ++ "\n\n");
-          print("Type: " ++ toStringType(r_ast.type) ++ "\n\n");
-          print("PP: " ++ r_ast.pp ++ "\n\n");
+          print("Value: " ++ toStringValue(r_ast.value) ++ "\n");
+          print("Type:  " ++ toStringType(r_ast.type) ++ "\n");
+          -- print("PP: " ++ r_ast.pp ++ "\n\n");
           return 0;
         };
       }
