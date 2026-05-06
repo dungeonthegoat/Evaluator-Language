@@ -25,6 +25,7 @@ c::MatchCase ::= p::Pattern e::Expr
 
   p.matchingVal = c.matchingVal;
   p.matchingType = c.matchingType;
+  p.typeEnv = c.typeEnv;
   c.isMatch = p.isMatch;
 
   e.env = p.matchedVars ++ c.env;

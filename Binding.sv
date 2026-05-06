@@ -29,6 +29,12 @@ e::Expr ::= name::String e1::Expr e2::Expr
 
 -- Concrete syntax
 
+concrete production constr_var_c
+e::Expr_c ::= name::TypeName
+{
+  e.ast = var(name.lexeme);
+}
+
 concrete production var_c
 e::Expr_c ::= name::Var
 {

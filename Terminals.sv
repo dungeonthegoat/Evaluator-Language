@@ -67,7 +67,8 @@ terminal ADT    'type'        precedence = 2, association = left,     lexer clas
 
 terminal True   'true'  lexer classes {KEYWORDS};
 terminal False  'false' lexer classes {KEYWORDS};
-terminal Var  /[a-zA-Z_][a-zA-Z0-9_]*/ submits to {KEYWORDS};
+terminal Var  /[a-z_][a-zA-Z0-9_]*/ submits to {KEYWORDS};
+terminal TypeName  /[A-Z][a-zA-Z0-9_]*/ submits to {KEYWORDS};
 terminal IntLit /-?[0-9]+/;
 
 -- Other

@@ -52,4 +52,7 @@ aspect pp on Pattern of
 | consPat(p1, p2) -> p1.pp ++ "::" ++ p2.pp
 | tuplePat(l, r) -> "(" ++ l.pp ++ ", " ++ r.pp ++ ")"
 | varPat(name) -> name
+| customPat(name, ps) -> name ++ "(" ++ implode(", ", 
+  map(\pat::Pattern -> pat.pp, ps)
+  ) ++ ")"
 end;

@@ -44,9 +44,10 @@ concrete productions t::Type_c
 | BoolT { t.type_ast = boolType(); }
 | AnyT { t.type_ast = anyType(); }
 | '[' t1::Type_c ']' { t.type_ast = listType(t1.type_ast); }
-| p::Type_c Arrow r::Type_c { t.type_ast = funcType(p.type_ast, r.type_ast); }
+| '(' p::Type_c Arrow r::Type_c ')' { t.type_ast = funcType(p.type_ast, r.type_ast); }
 | '(' t1::Type_c ')' { t.type_ast = t1.type_ast; }
 | '(' l::Type_c ',' r::Type_c ')' { t.type_ast = tupleType(l.type_ast, r.type_ast); }
+| v::TypeName { t.type_ast = customType(v.lexeme); }
 
 -- Functions
 

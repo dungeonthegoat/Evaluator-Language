@@ -1,0 +1,10 @@
+type Tree = Branch(Tree, int, Tree) | Leaf(int);
+
+sumTree(t : Tree) : int = ? t {
+  | Branch(l, v, r) -> sumTree.l + v + sumTree.r
+  | Leaf(v) -> v
+};
+
+test = Branch.(Branch.(Leaf.5).2.(Leaf.3)).1.(Leaf.2);
+
+sumTree.test -- Evaluates to 13

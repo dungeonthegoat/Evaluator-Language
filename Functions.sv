@@ -90,6 +90,26 @@ e::Expr ::= func::Expr arg::Expr
   e.typeErrors <- funcTypeError ++ argMatchParamError;
 }
 
+abstract production typeDeclaration
+e::Expr ::= name::String constructors::[(String, [Type])] rest::Expr
+{
+  propagate typeErrors;
+
+  rest.env = constructConstructorEnv(constructors, name, e.env) ++ e.env;
+  rest.typeEnv = constructConstructorTypeEnv(constructors, name) ++ e.typeEnv;
+
+  e.type = rest.type;
+  e.value = rest.value;
+
+  -- Questionable formatting
+  e.pp = "type " ++ name ++ " = " ++ 
+    implode(" | ",
+      map(\constr::(String, [Type]) ->
+        fst(constr) ++ " of " ++ "(" ++ implode(", ", map(toStringType, snd(constr))) ++ ")"
+      , constructors)
+    ) ++ " in\n" ++ rest.pp;
+}
+
 -- Concrete syntax
 
 concrete production lambda_c
@@ -119,20 +139,83 @@ e::Expr_c ::= f::Expr_c App a::Expr_c
 
 -- Functions
 
+@{- Returns a curried lambda expression representing a function of multiple parameters -}
 function constructLambdas
-Expr ::= params::[Pair<String Type>] body::Expr
+Expr ::= params::[(String, Type)] body::Expr
 {
   return case params of
   | [] -> ^body
-  | p::ps -> lambda(p.fst, p.snd, constructLambdas(ps, ^body))
+  | (n, t)::ps -> lambda(n, t, constructLambdas(ps, ^body))
   end;
 }
 
+@{- Returns the type of a multi-parameter function with a defined return type by currying funcTypes-}
 function constructFuncType
-Type ::= params::[Pair<String Type>] retType::Type
+Type ::= params::[(String, Type)] retType::Type
 {
   return case params of
   | [] -> ^retType
-  | p::ps -> funcType(p.snd, constructFuncType(ps, ^retType))
+  | (_, t)::ps -> funcType(t, constructFuncType(ps, ^retType))
+  end;
+}
+
+@{- Turns each constructor into a funcType representing its constructor function's type, and returns the list of such constructor types -}
+function constructConstructorTypeEnv
+[(String, Type)] ::= constrs::[(String, [Type])] typeName::String
+{
+  return map(\p::(String, [Type])->(p.fst, constrType(p.snd, typeName)), constrs);
+}
+
+@{- Returns the type of a constructor function for a custom type -}
+function constrType
+Type ::= args::[Type] typeName::String
+{
+  return constructFuncType(paramsOfTypeArgs(args, 0), customType(typeName));
+}
+
+@{- Returns the environment containing the closure values of each constructor for a custom type -}
+function constructConstructorEnv
+[(String, Value)] ::= constrs::[(String, [Type])] typeName::String env::[(String, Value)]
+{
+  return map(\p::(String, [Type])->(p.fst, constrValBinding(p, typeName, env)), constrs);
+}
+
+@{- Returns the value of a constructor function for a custom type -}
+function constrValBinding
+Value ::= constr::(String, [Type]) typeName::String env::[(String, Value)]
+{
+  local name :: String = fst(constr);
+  local args :: [Type] = snd(constr);
+
+  local params :: [(String, Type)] = paramsOfTypeArgs(args, 0);
+
+  -- Each parameter should be turned into a var expression
+  -- This is because they will all need to be reference as
+  -- expressions inside of the base expression at the lowest
+  -- level of curried lambdas
+  local argExprs :: [Expr] = map(\p::(String, Type) -> var(p.fst), params);
+  local baseExpr :: Expr = customTypeExpr(name, argExprs, typeName);
+  local lambdaExpr :: Expr = constructLambdas(params, ^baseExpr);
+  lambdaExpr.env = env;
+  lambdaExpr.typeEnv = [];
+
+  return
+    if null(args)
+    then customVal(name, [])
+    else lambdaExpr.value;
+}
+
+@{-
+  - Takes a list of types returns a list of named parameters where each type
+  - is named arbitrarily. This is done so that the arguments can be passed
+  - into the helper functions to construct function values and expressions.
+  -}
+function paramsOfTypeArgs
+[(String, Type)] ::= args::[Type] idx::Integer
+{
+  return case args of
+  | [] -> []
+  -- Dollar sign is added to prevent it from colliding with user-defined bindings
+  | t::ts -> ("$" ++ toString(idx), t) :: paramsOfTypeArgs(ts, idx + 1)
   end;
 }
