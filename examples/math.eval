@@ -1,0 +1,80 @@
+-- [ Arithmetic ] --
+
+let int intSqrtHelper int x int n =
+  if n >= x
+  then x
+  else
+    if n^2 > x
+    then n - 1
+    else intSqrtHelper x (n + 1);
+
+let int intSqrt int x = intSqrtHelper x 0;
+
+let float sqrt float x =
+  let k = intSqrt (<int>x);
+  let r = (x - k^2)/(2*k + 1);
+  r + k;
+
+-- [ Trigonometry ] --
+
+let int factorial int x =
+  if x <= 1
+  then 1
+  else x * (factorial (x - 1));
+
+let pi = 3.14159265358979323846;
+
+let float taylorsin float x int degree =
+  if degree <= 0
+  then 0.0
+  else
+    let osc = (-1) ^ (degree + 1);
+    let num = x ^ (2 * degree - 1);
+    let den = factorial (2 * degree - 1);
+    <float>(osc * num/den) + taylorsin x (degree - 1);
+
+let float sin float x =
+  if x >= pi
+  then sin (x - (2 * pi))
+  else
+    if x <= -pi
+    then sin (x + (2 * pi))
+    else taylorsin x 5;
+
+let float cos float x = sin (x + pi / 2);
+
+let float arccos float x =
+  pi / 2 -
+  x -
+  x^3 / 6 -
+  3 * x^5 / 40 -
+  5 * x^7 / 112 -
+  35 * x^9 / 1152;
+
+-- [ Vectors ] --
+
+type Vector3 = Vector3(float, float, float);
+
+let float length Vector3 v = ? v {
+  | Vector3(x, y, z) -> sqrt (x^2 + y^2 + z^2)
+};
+
+let float dot Vector3 v1 Vector3 v2 = ? v1 {
+  | Vector3(x1, y1, z1) -> ? v2 {
+    | Vector3(x2, y2, z2) -> x1 * x2 + y1 * y2 + z1 * z2
+  }
+};
+
+let Vector3 cross Vector3 v1 Vector3 v2 = ? v1 {
+  | Vector3(x1, y1, z1) -> ? v2 {
+    | Vector3(x2, y2, z2) -> Vector3 (y1 * z2 - z1 * y2) (z1 * x2 - x1 * z2) (x1 * y2 - y1 * x2)
+  }
+};
+
+let float angle Vector3 v1 Vector3 v2 = ? v1 {
+  | Vector3(x1, y1, z1) -> ? v2 {
+    | Vector3(x2, y2, z2) -> arccos ((dot v1 v2) / ((length v1) * (length v2)))
+  }
+};
+
+angle (Vector3 2.3 4.1 9.1) (Vector3 (-3.1) 5.1 12.4)

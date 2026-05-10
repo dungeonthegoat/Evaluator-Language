@@ -18,6 +18,7 @@ terminal Dash   '-'     precedence = 10, association = left;
 
 terminal ConsOp '::'        precedence = 9, association = right;
 terminal Append '@'         precedence = 9, association = right;
+terminal Concat '++'        precedence = 9, association = right;
 terminal LeftBracket '['    precedence = 8, association = left;
 terminal RightBracket ']'   precedence = 8, association = left;
 terminal Sep ','            precedence = 2, association = left;
@@ -59,10 +60,16 @@ terminal Then   'then'        precedence = 2, association = left,     lexer clas
 terminal Else   'else'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal IntT   'int'         precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal FloatT 'float'       precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal StringT 'string'     precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal BoolT  'bool'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal AnyT   'any'         precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal ADT    'type'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal Let    'let'         precedence = 2, association = left,     lexer classes {KEYWORDS};
+
+-- Other
+
+terminal LeftParen  '(' precedence = 15, association = left;
+terminal RightParen ')' precedence = 15, association = left;
 
 -- Value Literals
 
@@ -72,8 +79,4 @@ terminal Var  /[a-z_][a-zA-Z0-9_]*/ submits to {KEYWORDS};
 terminal TypeName  /[A-Z][a-zA-Z0-9_]*/ submits to {KEYWORDS};
 terminal IntLitT /(0|[1-9][0-9]*)/;
 terminal FloatLitT /[0-9]+\.[0-9]+/;
-
--- Other
-
-terminal LeftParen  '(' precedence = 15, association = left;
-terminal RightParen ')' precedence = 15, association = left;
+terminal StringLitT /"([^"\\]|\\.)*"/;

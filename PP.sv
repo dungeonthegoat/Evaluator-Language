@@ -3,6 +3,7 @@ grammar evaluator;
 synthesized attribute pp :: String;
 
 aspect pp on Expr of
+| stringLit(name) -> name
 -- Binding
 | var(name) -> name
 | letExpr(name, e1, e2) -> "let " ++ name ++ " = " ++ e1.pp ++ " in\n" ++ e2.pp

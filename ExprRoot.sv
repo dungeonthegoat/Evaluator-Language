@@ -50,6 +50,36 @@ e::Expr ::= name::String args::[Expr] typeName::String
   e.pp = name ++ "(" ++ implode(", ", map(\a::Decorated Expr -> a.pp, decoratedArgs)) ++ ")";
 }
 
+abstract production stringLit
+e::Expr ::= str::String
+{
+  e.type = stringType();
+  e.value = stringVal(str);
+}
+
+abstract production concatenate
+e::Expr ::= l::Expr r::Expr
+{
+  propagate env, typeEnv, typeErrors;
+
+  local typeMatchError :: [String] =
+    case l.type, r.type of
+    | stringType(), stringType() -> []
+    | errType(), _ -> []
+    | _, errType() -> []
+    | _, _ -> ["Cannot concatenate non-strings"]
+    end;
+
+  e.type =
+    case l.type, r.type of
+    | stringType(), stringType() -> stringType()
+    | _, _ -> errType()
+    end;
+  
+  e.value = stringVal(getStringVal(l.value) ++ getStringVal(r.value));
+  e.typeErrors <- typeMatchError;
+}
+
 -- Concrete syntax
 
 @@{-
@@ -77,6 +107,7 @@ nonterminal Term_c with ast;
 synthesized attribute astRoot::Root;
 synthesized attribute ast::Expr;
 
+
 concrete production root_c
 r::Root_c ::= e::Expr_c
 {
@@ -86,6 +117,7 @@ r::Root_c ::= e::Expr_c
 concrete productions e::Expr_c
 | a::App_c { e.ast = a.ast; }
 | If c::Expr_c Then e1::Expr_c Else e2::Expr_c { e.ast = ifThenElse(c.ast, e1.ast, e2.ast); }
+| l::Expr_c Concat r::Expr_c { e.ast = concatenate(l.ast, r.ast); }
 
 concrete production paren_c
 t::Term_c ::= LeftParen e::Expr_c RightParen
@@ -98,6 +130,10 @@ e::Expr_c ::= ADT name::TypeName Eq cs::ConstrList_c In rest::Expr_c
 {
   e.ast = typeDeclaration(name.lexeme, cs.constrs, rest.ast);
 }
+
+concrete productions t::Term_c
+| s::StringLitT { t.ast = stringLit(implode("", getInnerString(explode("", substring(1, length(s.lexeme) - 1, s.lexeme))))); }
+
 
 nonterminal TypeList_c with types;
 synthesized attribute types :: [Type];
@@ -122,3 +158,24 @@ synthesized attribute constrs :: [(String, [Type])];
 concrete productions cs::ConstrList_c
 | c::Constr_c { cs.constrs = [(c.type_name, c.types)]; }
 | c::Constr_c Bar rest::ConstrList_c { cs.constrs = (c.type_name, c.types) :: rest.constrs; }
+
+
+function getInnerString
+[String] ::= s::[String]
+{
+  return case s of
+  | [] -> []
+  | "\\"::rest -> getInnerString(rest)
+  | c::rest -> c::getInnerString(rest)
+  end;
+}
+
+
+function getStringVal
+String ::= v::Value
+{
+  return case v of
+  | stringVal(s) -> s
+  | _ -> ""
+  end;
+}

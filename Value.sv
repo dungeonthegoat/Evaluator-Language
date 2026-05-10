@@ -24,6 +24,10 @@ abstract production floatVal
 v::Value ::= f::Float
 {}
 
+abstract production stringVal
+v::Value ::= s::String
+{}
+
 abstract production closureVal
 v::Value ::= param::String body::Expr env::[Pair<String Value>]
 {}
@@ -54,6 +58,7 @@ String ::= v::Value
   return case v of
   | intVal(i) -> toString(i)
   | floatVal(f) -> toString(f)
+  | stringVal(s) -> s
   | closureVal(p, _, _) -> "Closure of " ++ p
   | recClosureVal(f, p, _, _) -> "Recursive closure " ++ f ++ " of " ++ p
   | boolVal(b) -> toString(b)

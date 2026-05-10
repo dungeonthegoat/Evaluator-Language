@@ -1,0 +1,12 @@
+let string implode [string] l = ? l {
+  | [] -> ""
+  | x::[] -> x
+  | x::xs -> x ++ ", " ++ (implode xs)
+};
+
+let [any] repeat int n any obj =
+  if n <= 0
+  then []
+  else obj::(repeat (n-1) obj);
+
+implode (repeat 100 "word")

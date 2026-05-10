@@ -137,13 +137,10 @@ abstract production divOp
 e::Expr ::= l::Expr r::Expr
 {
   propagate env, typeEnv, typeErrors;
-
+  
   local typeMatchError :: [String] = if numTypesMatch(l.type, r.type) then [] else ["Both operands of '/' must be numbers"];
-  local divByZeroError :: [String] = case r.value of
-    | intVal(0) -> ["Cannot divide by zero"]
-    | _ -> []
-  end;
-  e.typeErrors <- typeMatchError ++ divByZeroError;
+
+  e.typeErrors <- typeMatchError;
   e.type = getBinaryArithmeticType(l.type, r.type);
   e.value = 
     case l.value, r.value of
@@ -160,9 +157,30 @@ e::Expr ::= l::Expr r::Expr
 {
   propagate env, typeEnv, typeErrors;
 
-  e.typeErrors <- if intTypesMatch(l.type, r.type) then [] else ["Both operands of '^' must be integers"];
-  e.type = intType();
-  e.value = intVal(pow(getInt(l.value), getInt(r.value)));
+  local typeMatchError :: [String] =
+    case l.type, r.type of
+    | intType(), intType() -> []
+    | floatType(), intType() -> []
+    | _, errType() -> []
+    | errType(), _ -> []
+    | _, _ -> ["Power must be (integer|float) ^ integer"]
+    end;
+
+  e.typeErrors <- typeMatchError;
+
+  e.type = 
+    case l.type, r.type of
+    | intType(), intType() -> intType()
+    | floatType(), intType() -> floatType()
+    | _, _ -> errType()
+    end;
+  
+  e.value =
+    case l.value, r.value of
+    | intVal(il), intVal(ir) -> intVal(powInt(il, ir))
+    | floatVal(fl), intVal(ir) -> floatVal(powFloat(fl, ir))
+    | _, _ -> emptyListVal()
+    end;
 }
 
 abstract production modOp
@@ -240,12 +258,22 @@ Type ::= l::Type r::Type
 }
 
 @{- Returns x^y, assuming y >= 0 -}
-function pow
+function powInt
 Integer ::= x::Integer y::Integer
 {
   return case y of
   | y when y <= 0 -> 1
-  | _ -> x * pow(x, y - 1)
+  | _ -> x * powInt(x, y - 1)
+  end;
+}
+
+@{- Returns x^y, assuming y >= 0 -}
+function powFloat
+Float ::= x::Float y::Integer
+{
+  return case y of
+  | y when y <= 0 -> 1.0
+  | _ -> x * powFloat(x, y - 1)
   end;
 }
 

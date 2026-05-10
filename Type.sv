@@ -14,6 +14,10 @@ abstract production boolType
 t::Type ::=
 {}
 
+abstract production stringType
+t::Type ::=
+{}
+
 abstract production listType
 t::Type ::= varType::Type
 {}
@@ -58,6 +62,37 @@ e::Expr ::= name::String constructors::[(String, [Type])] rest::Expr
     ) ++ " in\n" ++ rest.pp;
 }
 
+abstract production typeCast
+e::Expr ::= t::Type e1::Expr
+{
+  propagate env, typeEnv, typeErrors;
+
+  local typeCastError :: [String] =
+    case t, e1.type of
+    | t1, t2 when equalsType(^t1, t2) -> []
+    | intType(), floatType() -> []
+    | floatType(), intType() -> []
+    | t1, t2 -> ["Cannot type cast " ++ toStringType(^t1) ++ " with " ++ toStringType(t2)]
+    end;
+
+  e.type =
+    case t, e1.type of
+    | t1, t2 when equalsType(^t1, t2) -> ^t1
+    | intType(), floatType() -> intType()
+    | floatType(), intType() -> floatType()
+    | _, _ -> errType()
+    end;
+  
+  e.value = 
+    case t, e1.value of
+    | intType(), floatVal(f) -> intVal(toInteger(f))
+    | floatType(), intVal(i) -> floatVal(toFloat(i))
+    | _, _ -> e1.value
+    end;
+  
+  e.typeErrors <- typeCastError;
+}
+
 -- Concrete syntax
 
 nonterminal Type_c with type_ast;
@@ -67,12 +102,19 @@ concrete productions t::Type_c
 | IntT { t.type_ast = intType(); }
 | FloatT { t.type_ast = floatType(); }
 | BoolT { t.type_ast = boolType(); }
+| StringT { t.type_ast = stringType(); }
 | AnyT { t.type_ast = anyType(); }
 | LeftBracket t1::Type_c RightBracket { t.type_ast = listType(t1.type_ast); }
 | LeftParen p::Type_c Arrow r::Type_c RightParen { t.type_ast = funcType(p.type_ast, r.type_ast); }
 | LeftParen t1::Type_c RightParen { t.type_ast = t1.type_ast; }
 | LeftParen l::Type_c Sep r::Type_c RightParen { t.type_ast = tupleType(l.type_ast, r.type_ast); }
 | v::TypeName { t.type_ast = customType(v.lexeme); }
+
+concrete production typeCastExpr
+e::Expr_c ::= Less t::Type_c Greater e1::Expr_c
+{
+  e.ast = typeCast(t.type_ast, e1.ast);
+}
 
 -- Functions
 
@@ -94,6 +136,11 @@ Boolean ::= t1::Type t2::Type
   | boolType() -> case t2 of
     | anyType() -> true
     | boolType() -> true
+    | _ -> false
+    end
+  | stringType() -> case t2 of
+    | anyType() -> true
+    | stringType() -> true
     | _ -> false
     end
   | errType() -> case t2 of
@@ -133,6 +180,7 @@ String ::= t::Type
   | intType() -> "int"
   | floatType() -> "float"
   | boolType() -> "bool"
+  | stringType() -> "string"
   | errType() -> "error"
   | listType(innerT) -> "[" ++ toStringType(^innerT) ++ "]"
   | funcType(paramT, returnT) -> "(" ++ toStringType(^paramT) ++ " -> " ++ toStringType(^returnT) ++ ")"
