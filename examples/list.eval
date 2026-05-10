@@ -5,7 +5,4 @@ let [any] filter [any] l (any -> bool) f = ? l {
     else filter t f
 };
 
-let nums = [1...5];
-let bool is_even int x = x % 2 == 0;
-
-filter nums is_even
+0

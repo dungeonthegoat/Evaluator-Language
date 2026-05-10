@@ -48,7 +48,7 @@ terminal Or     '||'    precedence = 4, association = left, lexer classes {KEYWO
 
 -- Lambda & Binding
 
-terminal Lambda 'lambda'    precedence = 2, association = right, lexer classes {KEYWORDS};
+terminal Lambda '\'    precedence = 2, association = right, lexer classes {KEYWORDS};
 terminal Colon  ':'         precedence = 2, association = left;
 terminal Eq     '='         precedence = 2, association = left;
 terminal In     ';'         precedence = 2, association = left;

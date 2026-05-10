@@ -15,7 +15,22 @@ let float sqrt float x =
   let r = (x - k^2)/(2*k + 1);
   r + k;
 
+-- [ Calculus ] --
+
+let integral_slices = 300;
+
+let float integralSum int n float start float end (float -> float) f =
+  if n <= 0 then 0.0 else
+  let inner = n * (end - start) / integral_slices + start;
+  let outer = (end - start) / integral_slices;
+  (outer * (f inner)) + (integralSum (n - 1) start end f);
+
+let float integral float start float end (float -> float) f =
+  integralSum integral_slices start end f;
+
 -- [ Trigonometry ] --
+
+let taylor_sin_deg = 10;
 
 let int factorial int x =
   if x <= 1
@@ -39,7 +54,7 @@ let float sin float x =
   else
     if x <= -pi
     then sin (x + (2 * pi))
-    else taylorsin x 5;
+    else taylorsin x taylor_sin_deg;
 
 let float cos float x = sin (x + pi / 2);
 
@@ -49,7 +64,15 @@ let float arccos float x =
   x^3 / 6 -
   3 * x^5 / 40 -
   5 * x^7 / 112 -
-  35 * x^9 / 1152;
+  35 * x^9 / 1152 -
+  63 * x^11 / 2816 -
+  231 * x^13 / 13312 -
+  143 * x^15 / 10240 -
+  6435 * x^17 / 557056 -
+  12155 * x^19 / 1245184 -
+  46189 * x^21 / 5505024;
+
+let float arcsin float x = (-(arccos x)) + pi / 2;
 
 -- [ Vectors ] --
 
@@ -77,4 +100,6 @@ let float angle Vector3 v1 Vector3 v2 = ? v1 {
   }
 };
 
-angle (Vector3 2.3 4.1 9.1) (Vector3 (-3.1) 5.1 12.4)
+integral 0.0 1.0 cos
+
+-- angle (Vector3 2.3 4.1 9.1) (Vector3 (-3.1) 5.1 12.4)
