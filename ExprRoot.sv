@@ -24,8 +24,8 @@ r::Root ::= e::Expr
 {
   propagate typeErrors;
 
-  e.typeEnv = [];
   e.env = [];
+  e.typeEnv = [];
 
   r.pp = e.pp;
   r.value = e.value;

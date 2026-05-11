@@ -121,6 +121,12 @@ concrete productions a::App_c
 | t::Term_c { a.ast = t.ast; }
 | f::App_c t::Term_c { a.ast = app(f.ast, t.ast); }
 
+concrete production pipe
+e::Expr_c ::= arg::Expr_c Pipe func::Expr_c
+{
+  e.ast = app(func.ast, arg.ast);
+}
+
 
 nonterminal TypedVar_c with name, type_ast;
 synthesized attribute name :: String;

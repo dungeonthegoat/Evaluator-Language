@@ -52,6 +52,7 @@ terminal Lambda '\'    precedence = 2, association = right, lexer classes {KEYWO
 terminal Colon  ':'         precedence = 2, association = left;
 terminal Eq     '='         precedence = 2, association = left;
 terminal In     ';'         precedence = 2, association = left;
+terminal Pipe   '|>'        precedence = 4, association = left;
 
 -- Keywords
 
