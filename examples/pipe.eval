@@ -1,5 +1,0 @@
-let int double int x = 2 * x;
-let int square int x = x ^ 2;
-
-
-5 |> double |> square

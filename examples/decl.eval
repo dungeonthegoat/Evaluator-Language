@@ -1,6 +1,1 @@
-var nums = [1, 3, 5, 7]
-
-func int sum [int] l = ? l {
-    | [] -> 0
-    | h::t -> h + sum t
-}
+var x = 12;
