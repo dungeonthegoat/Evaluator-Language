@@ -34,7 +34,7 @@ IO<Integer> ::=
       return 0;
     }
     else do {
-      let isLoadCmd = substring(0, 4, command) == loadCommand;
+      let isLoadCmd = length(command) > 5 && substring(0, 4, command) == loadCommand;
       
       expr <- 
         if isLoadCmd 
