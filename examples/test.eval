@@ -1,0 +1,2 @@
+let int add int x int y = x + y;
+add 1 2
