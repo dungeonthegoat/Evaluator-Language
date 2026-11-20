@@ -1,2 +1,11 @@
-let int add int x int y = x + y;
-add 1 2
+let int length [`a] l = ? l {
+    | _::rest -> 1 + length rest
+    | [] -> 0
+};
+
+let (int, int) order ([`a], [`b]) l = ? l {
+    | (a, b) -> ((length a), (length b))
+};
+
+order
+-- order ([1, 2, 4, 2], [2, 5])

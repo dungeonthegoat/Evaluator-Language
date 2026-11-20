@@ -76,6 +76,7 @@ IO<Integer> ::= expr::String sourceName::String
             }
             else do {
                 print("=: " ++ toStringValue(ast.value) ++ "\n");
+                print("type: " ++ toStringType(ast.type) ++ "\n");
                 return 0;
             };
         }

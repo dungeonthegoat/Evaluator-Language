@@ -42,6 +42,10 @@ abstract production customType
 t::Type ::= name::String
 {}
 
+abstract production inferredType
+t::Type ::= id::Integer
+{}
+
 abstract production typeDeclaration
 e::Expr ::= name::String constructors::[(String, [Type])] rest::Expr
 {
@@ -104,6 +108,7 @@ concrete productions t::Type_c
 | BoolT { t.type_ast = boolType(); }
 | StringT { t.type_ast = stringType(); }
 | AnyT { t.type_ast = anyType(); }
+| Tick v::Var { t.type_ast = anyType(); }
 | LeftBracket t1::Type_c RightBracket { t.type_ast = listType(t1.type_ast); }
 | LeftParen p::Type_c Arrow r::Type_c RightParen { t.type_ast = funcType(p.type_ast, r.type_ast); }
 | LeftParen t1::Type_c RightParen { t.type_ast = t1.type_ast; }
@@ -113,10 +118,72 @@ concrete productions t::Type_c
 concrete production typeCastExpr
 e::Expr_c ::= Less t::Type_c Greater e1::Expr_c
 {
-  e.ast = typeCast(t.type_ast, e1.ast);
+    e.ast = typeCast(t.type_ast, e1.ast);
 }
 
 -- Functions
+
+function unify
+[(Integer, Type)] ::= t1::Type t2::Type s::[(Integer, Type)]
+{
+    return case t1, t2 of
+    | l, r when equalsType(^l, ^r) -> s
+    | inferredType(id), t ->
+        if containsType(inferredType(id), ^t)
+        then s
+        else (id, ^t)::s
+    | t, inferredType(id) ->
+        if containsType(inferredType(id), ^t)
+        then s
+        else (id, ^t)::s
+    | listType(a), listType(b) -> unify(^a, ^b, s)
+    | tupleType(la, ra), tupleType(lb, rb) -> unify(^ra, ^rb, unify(^la, ^lb, s))
+    | funcType(pa, ra), funcType(pb, rb) -> unify(^ra, ^rb, unify(^pa, ^pb, s))
+    | _, _ -> s
+    end;
+}
+
+function applySubstitution
+Type ::= t::Type s::[(Integer, Type)]
+{
+    return case t of
+    | intType() -> intType()
+    | floatType() -> floatType()
+    | boolType() -> boolType()
+    | stringType() -> stringType()
+    | customType(name) -> customType(name)
+    | errType() -> errType()
+    | anyType() -> anyType()
+    | inferredType(id) -> lookupSubstitution(id, s, s)
+    | listType(inner) -> listType(applySubstitution(new(inner), s))
+    | tupleType(l, r) -> tupleType(applySubstitution(new(l), s), applySubstitution(new(r), s))
+    | funcType(p, r) -> funcType(applySubstitution(new(p), s), applySubstitution(new(r), s))
+    | _ -> new(t)
+    end;
+}
+
+function lookupSubstitution
+Type ::= id::Integer current::[(Integer, Type)] fullSubst::[(Integer, Type)]
+{
+    return case current of
+    | (id1, t1)::rest ->
+        if id1 == id
+        then applySubstitution(t1, fullSubst)
+        else lookupSubstitution(id, rest, fullSubst)
+    | [] -> inferredType(id)
+    end;
+}
+
+function containsType
+Boolean ::= target::Type container::Type
+{
+    return case container of
+    | tupleType(l, r) -> containsType(^l, ^container) || containsType(^r, ^container)
+    | listType(t) -> containsType(^t, ^container)
+    | funcType(p, r) -> containsType(^p, ^container) || containsType(^r, ^container)
+    | t -> equalsType(^t, ^target)
+    end;
+}
 
 @{-Compares two types to see if they are equivalent-}
 function equalsType
@@ -168,6 +235,11 @@ Boolean ::= t1::Type t2::Type
     | customType(n2) -> n1 == n2
     | _ -> false
     end
+  | inferredType(id1) -> case t2 of
+    | anyType() -> true
+    | inferredType(id2) -> id1 == id2
+    | _ -> false
+    end  
   | anyType() -> true
   | _ -> false
   end;

@@ -5,6 +5,10 @@ ignore terminal Comment    /\-\-[^\n\r]*/;
 
 lexer class KEYWORDS;
 
+-- Types
+
+terminal Tick   '`'     precedence = 8, association = left;
+
 -- Arithmetic
 
 terminal Pow   '^'      precedence = 14, association = right;
