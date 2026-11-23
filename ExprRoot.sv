@@ -1,13 +1,18 @@
 grammar evaluator;
 
 nonterminal Root with value, pp, type, typeErrors;
-nonterminal Expr with value, pp, env, type, typeErrors, typeEnv;
+nonterminal Expr with value, pp, env, type, typeErrors, typeEnv, substMap, newSubstMap, varID, newVarID;
 
 inherited attribute env :: [(String, Value)];
 inherited attribute typeEnv :: [(String, Type)];
 monoid attribute typeErrors :: [String] with [], ++;
 synthesized attribute value :: Value;
 synthesized attribute type :: Type;
+
+inherited attribute varID :: Integer;
+inherited attribute substMap :: [(Integer, Type)];
+synthesized attribute newVarID :: Integer;
+synthesized attribute newSubstMap :: [(Integer, Type)];
 
 -- Default
 
@@ -27,6 +32,9 @@ r::Root ::= e::Expr
   e.env = [];
   e.typeEnv = [];
 
+  e.varID = 0;
+  e.substMap = [];
+
   r.pp = e.pp;
   r.value = e.value;
   r.type = e.type;
@@ -41,6 +49,8 @@ e::Expr ::= name::String args::[Expr] typeName::String
     map(\ex::Expr -> decorate ex with {
         env = e.env;
         typeEnv = e.typeEnv;
+        varID = e.varID;
+        substMap = e.substMap;
       }, args
     );
 

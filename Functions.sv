@@ -1,29 +1,59 @@
 grammar evaluator;
 
+abstract production untypedFunction
+e::Expr ::= name::String params::[String] body::Expr rest::Expr
+{
+    local paramTypes :: [(String, Type)] = constructParameterTypeIDs(params, e.varID);
+    local retType :: Type = inferredType(e.varID + length(params));
+
+    forwards to letRecExpr(
+        name,
+        head(paramTypes).fst,
+        head(paramTypes).snd,
+        constructFuncType(tail(paramTypes), ^retType),
+        constructLambdas(tail(paramTypes), ^body),
+        ^rest
+    );
+}
+
 abstract production letRecExpr
 e::Expr ::= name::String param::String paramType::Type returnType::Type body::Expr e2::Expr
 {
-  propagate typeErrors;
+    propagate typeErrors;
 
-  local selfType :: Type = funcType(^paramType, ^returnType);
+    local selfType :: Type = funcType(^paramType, ^returnType);
 
-  e2.typeEnv = (name, ^selfType) :: e.typeEnv;
-  e2.env = (name, recClosureVal(name, param, ^body, e.env)) :: e.env;
+    body.typeEnv = (name, ^selfType) :: (param, ^paramType) :: e.typeEnv;
+    body.env = e.env;
+    body.varID = case returnType of
+    | inferredType(id) -> id + 1
+    | _ -> e.varID
+    end;
+    body.substMap = e.substMap;
 
-  body.typeEnv = (name, ^selfType) :: (param, ^paramType) :: e.typeEnv;
-  body.env = e.env;
+    local retSubst :: [(Integer, Type)] = unify(body.type, ^returnType, body.newSubstMap);
+    local newBodyType :: Type = applySubstitution(body.type, retSubst);
+    local newReturnType :: Type = applySubstitution(^returnType, retSubst);
+    local newSelfType :: Type = applySubstitution(^selfType, retSubst);
 
-  e.type = e2.type;
-  e.value = e2.value;
+    e2.typeEnv = (name, ^newSelfType) :: e.typeEnv;
+    e2.env = (name, recClosureVal(name, param, ^body, e.env)) :: e.env;
+    e2.varID = body.newVarID;
+    e2.substMap = retSubst;
 
-  local retTypeError :: [String] = case body.type, returnType of
-  | t1, t2 when equalsType(t1, ^t2) -> []
-  | _, errType() -> []
-  | errType(), _ -> []
-  | _, _ -> ["Return type of function '" ++ name ++ "' does not match its declared return type"]
-  end;
+    e.type = e2.type;
+    e.value = e2.value;
+    e.newVarID = e2.newVarID;
+    e.newSubstMap = e2.newSubstMap;
 
-  e.typeErrors <- retTypeError;
+    local retTypeError :: [String] = case newBodyType, newReturnType of
+    | t1, t2 when equalsType(^t1, ^t2) -> []
+    | _, errType() -> []
+    | errType(), _ -> []
+    | _, _ -> ["Return type of function '" ++ name ++ "' does not match its declared return type"]
+    end;
+
+    e.typeErrors <- retTypeError;
 }
 
 abstract production lambda
@@ -31,67 +61,78 @@ e::Expr ::= param::String paramType::Type b::Expr
 {
   propagate env, typeErrors;
   
-  b.typeEnv = (param, ^paramType) :: e.typeEnv ;
+  b.typeEnv = (param, ^paramType) :: e.typeEnv;
+  b.varID = e.varID;
+  b.substMap = e.substMap;
 
   e.type = funcType(^paramType, b.type);
   e.value = closureVal(param, ^b, e.env);
+  e.newVarID = b.newVarID;
+  e.newSubstMap = b.newSubstMap;
 }
 
 abstract production app
 e::Expr ::= func::Expr arg::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  local paramType :: Type = case func.type of
-  | funcType(p, _) -> ^p
-  | _ -> errType()
-  end;
+    func.varID = e.varID;
+    arg.varID = func.newVarID;
+    local retVar :: Type = inferredType(arg.newVarID);
+    e.newVarID = arg.newVarID + 1;
 
-  local returnType :: Type = case func.type of
-  | funcType(_, r) -> ^r
-  | _ -> errType()
-  end;
+    func.substMap = e.substMap;
+    arg.substMap = func.newSubstMap;
+    e.newSubstMap = unify(func.type, funcType(arg.type, ^retVar), arg.newSubstMap);
 
-  local funcTypeError :: [String] = case func.type of
-  | funcType(_, _) -> []
-  | errType() -> []
-  | _ -> ["Attempted application of a non-function"]
-  end;
+    local resolvedFuncType :: Type = applySubstitution(func.type, e.newSubstMap);
+    local resolvedArgType :: Type = applySubstitution(arg.type, e.newSubstMap);
 
-  local argMatchParamError :: [String] =
-    if equalsType(arg.type, ^paramType) || (equalsType(arg.type, errType()))
+    local paramType :: Type = case resolvedFuncType of
+    | funcType(p, _) -> ^p
+    | _ -> errType()
+    end;
+
+    local funcTypeError :: [String] = case resolvedFuncType of
+    | funcType(_, _) -> []
+    | errType() -> []
+    | _ -> ["Attempted application of a non-function"]
+    end;
+
+    local argMatchParamError :: [String] =
+    if equalsType(^resolvedArgType, ^paramType) || equalsType(^resolvedArgType, errType())
     then []
     else [
-          "Argument type " ++
-          toStringType(arg.type) ++
-          " does not match expected parameter type " ++
-          toStringType(^paramType)
+            "Argument type " ++
+            toStringType(^resolvedArgType) ++
+            " does not match expected parameter type " ++
+            toStringType(^paramType)
         ];
-  
-  local param :: String = case func.value of
-  | closureVal(p, _, _) -> p
-  | recClosureVal(_, p, _, _) -> p
-  | _ -> error("Type error: expected a function")
-  end;
 
-  local body :: Expr = case func.value of
-  | closureVal(_, b, _) -> ^b
-  | recClosureVal(_, _, b, _) -> ^b
-  | _ -> error("Type error: expected a function")
-  end;
+    local param :: String = case func.value of
+    | closureVal(p, _, _) -> p
+    | recClosureVal(_, p, _, _) -> p
+    | _ -> error("Type error: expected a function")
+    end;
 
-  local f_env :: [Pair<String Value>] = case func.value of
-  | closureVal(_, _, f) -> f
-  | recClosureVal(name, _, _, f) -> pair(fst=name, snd=func.value) :: f
-  | _ -> []
-  end;
+    local body :: Expr = case func.value of
+    | closureVal(_, b, _) -> ^b
+    | recClosureVal(_, _, b, _) -> ^b
+    | _ -> error("Type error: expected a function")
+    end;
 
-  body.env = pair(fst=param, snd=arg.value) :: f_env;
+    local f_env :: [Pair<String Value>] = case func.value of
+    | closureVal(_, _, f) -> f
+    | recClosureVal(name, _, _, f) -> pair(fst=name, snd=func.value) :: f
+    | _ -> []
+    end;
 
-  e.type = ^returnType;
-  e.value = body.value;
+    body.env = pair(fst=param, snd=arg.value) :: f_env;
 
-  e.typeErrors <- funcTypeError ++ argMatchParamError;
+    e.type = applySubstitution(^retVar, e.newSubstMap);
+    e.value = body.value;
+
+    e.typeErrors <- funcTypeError ++ argMatchParamError;
 }
 
 -- Concrete syntax
@@ -100,6 +141,19 @@ concrete production lambda_c
 e::Expr_c ::= Lambda param::Var Colon t::Type_c Arrow body::Expr_c
 {
   e.ast = lambda(param.lexeme, t.type_ast, body.ast);
+}
+
+-- Untyped function, names.head represents the function name,
+-- the rest are parameter names
+concrete production untyped_func
+e::Expr_c ::= Let Inf names::VarList_c Eq body::Expr_c In rest::Expr_c
+{
+    e.ast = untypedFunction(
+        head(names.untyped_vars),
+        tail(names.untyped_vars),
+        body.ast,
+        rest.ast
+    );
 }
 
 concrete production func
@@ -160,7 +214,33 @@ tvl::TypedVarList_c ::= tv::TypedVar_c rest::TypedVarList_c
   tvl.vars = (tv.name, tv.type_ast) :: rest.vars;
 }
 
+nonterminal VarList_c with untyped_vars;
+synthesized attribute untyped_vars :: [String];
+
+concrete production singleVar_c
+vl::VarList_c ::= v::Var
+{
+    vl.untyped_vars = [v.lexeme];
+}
+
+concrete production varList_c
+vl::VarList_c ::= v::Var rest::VarList_c
+{
+    vl.untyped_vars = v.lexeme :: rest.untyped_vars;
+}
+
 -- Functions
+
+@{- Constructs the inferred type IDs for a list of untyped parameters -}
+function constructParameterTypeIDs
+[(String, Type)] ::= params::[String] nextId::Integer
+{
+    return case params of
+    | [] -> []
+    | param::rest ->
+        (param, inferredType(nextId))::constructParameterTypeIDs(rest, nextId + 1)
+    end;
+}
 
 @{- Returns a curried lambda expression representing a function of multiple parameters -}
 function constructLambdas

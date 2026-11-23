@@ -1,0 +1,2 @@
+let untyped add x y = x + y;
+add

@@ -10,6 +10,8 @@ e::Expr ::= name::String
   end;
 
   e.value = lookup(name, e.env);
+  e.newVarID = e.varID;
+  e.newSubstMap = e.substMap;
 }
 
 abstract production letExpr

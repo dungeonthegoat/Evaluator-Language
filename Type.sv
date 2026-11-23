@@ -126,20 +126,20 @@ e::Expr_c ::= Less t::Type_c Greater e1::Expr_c
 function unify
 [(Integer, Type)] ::= t1::Type t2::Type s::[(Integer, Type)]
 {
-    return case t1, t2 of
-    | l, r when equalsType(^l, ^r) -> s
+    return case applySubstitution(^t1, s), applySubstitution(^t2, s) of
+    | l, r when equalsType(l, r) -> s
     | inferredType(id), t ->
-        if containsType(inferredType(id), ^t)
+        if containsType(inferredType(id), t)
         then s
-        else (id, ^t)::s
+        else (id, t)::s
     | t, inferredType(id) ->
-        if containsType(inferredType(id), ^t)
+        if containsType(inferredType(id), t)
         then s
-        else (id, ^t)::s
+        else (id, t)::s
     | listType(a), listType(b) -> unify(^a, ^b, s)
     | tupleType(la, ra), tupleType(lb, rb) -> unify(^ra, ^rb, unify(^la, ^lb, s))
     | funcType(pa, ra), funcType(pb, rb) -> unify(^ra, ^rb, unify(^pa, ^pb, s))
-    | _, _ -> s
+    | _, _ -> error("Unification failed")
     end;
 }
 
@@ -178,9 +178,9 @@ function containsType
 Boolean ::= target::Type container::Type
 {
     return case container of
-    | tupleType(l, r) -> containsType(^l, ^container) || containsType(^r, ^container)
-    | listType(t) -> containsType(^t, ^container)
-    | funcType(p, r) -> containsType(^p, ^container) || containsType(^r, ^container)
+    | tupleType(l, r) -> containsType(^target, ^l) || containsType(^target, ^r)
+    | listType(t) -> containsType(^target, ^t)
+    | funcType(p, r) -> containsType(^target, ^p) || containsType(^target, ^r)
     | t -> equalsType(^t, ^target)
     end;
 }

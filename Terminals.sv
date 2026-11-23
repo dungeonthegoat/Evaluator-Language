@@ -70,6 +70,7 @@ terminal BoolT  'bool'        precedence = 2, association = left,     lexer clas
 terminal AnyT   'any'         precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal ADT    'type'        precedence = 2, association = left,     lexer classes {KEYWORDS};
 terminal Let    'let'         precedence = 2, association = left,     lexer classes {KEYWORDS};
+terminal Inf    'untyped'     precedence = 2, association = left,     lexer classes {KEYWORDS};
 
 -- Other
 
