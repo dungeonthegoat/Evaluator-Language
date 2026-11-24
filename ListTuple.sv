@@ -24,6 +24,66 @@ e::Expr ::= h::Expr t::Expr
   end;
 }
 
+abstract production headExpr
+e::Expr ::= e1::Expr
+{
+    propagate env, typeEnv, typeErrors;
+
+    e.type = case e1.type of
+    | listType(someType) -> ^someType
+    | _ -> errType()
+    end;
+
+    e.value = case e1.value of
+    | consVal(h, _) -> ^h
+    | _ -> emptyListVal()
+    end;
+
+    e.typeErrors <-
+        if equalsType(e.type, errType())
+        then ["Invalid type in 'head' operation"]
+        else [];
+}
+
+abstract production tailExpr
+e::Expr ::= e1::Expr
+{
+    propagate env, typeEnv, typeErrors;
+
+    e.type = case e1.type of
+    | listType(someType) -> listType(^someType)
+    | _ -> errType()
+    end;
+
+    e.value = case e1.value of
+    | consVal(_, rest) -> ^rest
+    | _ -> emptyListVal()
+    end;
+
+    e.typeErrors <-
+        if equalsType(e.type, errType())
+        then ["Invalid type in 'tail' operation"]
+        else [];
+}
+
+abstract production nullExpr
+e::Expr ::= e1::Expr
+{
+    propagate env, typeEnv, typeErrors;
+
+    e.type = boolType();
+
+    e.value = case e1.value of
+    | emptyListVal() -> boolVal(true)
+    | _ -> boolVal(false)
+    end;
+
+    e.typeErrors <- case e1.type of
+    | listType(_) -> []
+    | _ -> ["Cannot check nullity of non-list type"]
+    end;
+}
+
 abstract production appendExpr
 e::Expr ::= l::Expr r::Expr
 {
@@ -66,6 +126,24 @@ e::Expr ::= l::Expr r::Expr
 }
 
 -- Concrete syntax
+
+concrete production listHead_c
+h::Expr_c ::= Head LeftParen e::Expr_c RightParen
+{
+    h.ast = headExpr(e.ast);
+}
+
+concrete production listTail_c
+h::Expr_c ::= Tail LeftParen e::Expr_c RightParen
+{
+    h.ast = tailExpr(e.ast);
+}
+
+concrete production listNull_c
+h::Expr_c ::= Null LeftParen e::Expr_c RightParen
+{
+    h.ast = nullExpr(e.ast);
+}
 
 concrete productions t::Term_c
 | LeftBracket RightBracket { t.ast = emptyExpr(); }

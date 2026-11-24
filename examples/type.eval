@@ -1,2 +1,2 @@
-let untyped add x y = x + y;
-add
+let nums = [1];
+null(nums)

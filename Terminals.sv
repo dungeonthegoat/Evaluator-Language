@@ -27,6 +27,9 @@ terminal LeftBracket '['    precedence = 8, association = left;
 terminal RightBracket ']'   precedence = 8, association = left;
 terminal Sep ','            precedence = 2, association = left;
 terminal Dots '...'         precedence = 2, association = left;
+terminal Head 'head'        precedence = 14, association = left, lexer classes {KEYWORDS};
+terminal Tail 'tail'        precedence = 14, association = left, lexer classes {KEYWORDS};
+terminal Null 'null'        precedence = 14, association = left, lexer classes {KEYWORDS};
 
 -- Pattern Matching
 
@@ -46,13 +49,13 @@ terminal EqOp   '=='        precedence = 6,  association = left;
 
 -- Boolean Logic
 
-terminal Not    '!'     precedence = 8, association = left, lexer classes {KEYWORDS};
-terminal And    '&&'    precedence = 5, association = left, lexer classes {KEYWORDS};
-terminal Or     '||'    precedence = 4, association = left, lexer classes {KEYWORDS};
+terminal Not    '!'     precedence = 8, association = left;
+terminal And    '&&'    precedence = 5, association = left;
+terminal Or     '||'    precedence = 4, association = left;
 
 -- Lambda & Binding
 
-terminal Lambda '\'    precedence = 2, association = right, lexer classes {KEYWORDS};
+terminal Lambda '\'    precedence = 2, association = right;
 terminal Colon  ':'         precedence = 2, association = left;
 terminal Eq     '='         precedence = 2, association = left;
 terminal In     ';'         precedence = 2, association = left;
