@@ -5,6 +5,9 @@ e::Expr ::= i::Integer
 {
   e.type = intType();
   e.value = intVal(i);
+
+  e.newVarID = e.varID;
+  e.newSubstMap = e.substMap;
 }
 
 abstract production floatLit

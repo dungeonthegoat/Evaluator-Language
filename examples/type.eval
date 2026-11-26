@@ -1,2 +1,2 @@
-let nums = [1];
-null(nums)
+let untyped f x y = x >= y;
+f

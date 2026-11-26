@@ -259,6 +259,7 @@ String ::= t::Type
   | anyType() -> "any"
   | tupleType(l, r) -> "(" ++ toStringType(^l) ++ ", " ++ toStringType(^r) ++ ")"
   | customType(n) -> n
+  | inferredType(id) -> toString(id)
   | _ -> "?"
   end;
 }

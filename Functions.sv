@@ -25,10 +25,11 @@ e::Expr ::= name::String param::String paramType::Type returnType::Type body::Ex
 
     body.typeEnv = (name, ^selfType) :: (param, ^paramType) :: e.typeEnv;
     body.env = e.env;
-    body.varID = case returnType of
-    | inferredType(id) -> id + 1
-    | _ -> e.varID
-    end;
+    -- Find the largest inferred variable ID used within the body and increment
+    -- to ensure no collision occurs between type variables with multiple
+    -- parameters
+    local maxId :: Integer = maxInferredID(^returnType);
+    body.varID = if maxId >= e.varID then maxId + 1 else e.varID;
     body.substMap = e.substMap;
 
     local retSubst :: [(Integer, Type)] = unify(body.type, ^returnType, body.newSubstMap);
@@ -260,4 +261,27 @@ Type ::= params::[(String, Type)] retType::Type
   | [] -> ^retType
   | (_, t)::ps -> funcType(t, constructFuncType(ps, ^retType))
   end;
+}
+
+@{- Returns the largest inferred type ID -}
+function maxInferredID
+Integer ::= t::Type
+{
+    return case t of
+    | inferredType(id) -> id
+    | listType(inner) -> maxInferredID(^inner)
+    | tupleType(l, r) -> max(maxInferredID(^l), maxInferredID(^r))
+    | funcType(p, r) -> max(maxInferredID(^p), maxInferredID(^r))
+    | _ -> -1
+    end;
+}
+
+@{- Returns the maximum of two integers -}
+function max
+Integer ::= x::Integer y::Integer
+{
+    return
+    if x > y
+    then x
+    else y;
 }

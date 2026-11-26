@@ -29,20 +29,29 @@ e::Expr ::= e1::Expr
 {
     propagate env, typeEnv, typeErrors;
 
-    e.type = case e1.type of
-    | listType(someType) -> ^someType
-    | _ -> errType()
-    end;
-
     e.value = case e1.value of
     | consVal(h, _) -> ^h
     | _ -> emptyListVal()
     end;
 
-    e.typeErrors <-
-        if equalsType(e.type, errType())
-        then ["Invalid type in 'head' operation"]
-        else [];
+    e1.varID = e.varID;
+    e.newVarID = e1.newVarID + 1;
+
+    e1.substMap = e.substMap;
+    e.newSubstMap = unify(e1.type, listType(inferredType(e.newVarID - 1)), e1.newSubstMap);
+
+    local newType :: Type = applySubstitution(e1.type, e.newSubstMap);
+
+    e.type = case newType of
+    | listType(someType) -> ^someType
+    | _ -> errType()
+    end;
+
+    e.typeErrors <- case newType of
+    | listType(_) -> []
+    | errType() -> []
+    | _ -> ["Invalid type in 'head' operation"]
+    end;
 }
 
 abstract production tailExpr
