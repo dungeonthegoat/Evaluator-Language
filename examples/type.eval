@@ -1,6 +1,5 @@
-let untyped fact x =
-    if x <= 1
-    then 1
-    else x * (f (x - 1));
-
-fact
+let untyped map f l =
+    if null(l)
+    then []
+    else (f (head(l))) :: tail(l);
+map

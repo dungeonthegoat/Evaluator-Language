@@ -3,25 +3,40 @@ grammar evaluator;
 abstract production emptyExpr
 e::Expr ::=
 {
-  e.type = listType(anyType());
-  e.value = emptyListVal();
+    e.value = emptyListVal();
+
+    e.type = listType(inferredType(e.varID));
+    e.newVarID = e.varID + 1;
+    e.newSubstMap = e.substMap;
 }
 
 abstract production consExpr
 e::Expr ::= h::Expr t::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = listType(h.type);
-  e.value = consVal(h.value, t.value);
+    e.value = consVal(h.value, t.value);
 
-  e.typeErrors <- case t.type of
-  | listType(innerT) ->
-    if equalsType(h.type, ^innerT)
-    then []
-    else ["All elements of a list must match type"]
-  | _ -> ["Cannot cons with a non-list"]
-  end;
+    h.varID = e.varID;
+    t.varID = h.newVarID;
+    e.newVarID = t.newVarID;
+
+    h.substMap = e.substMap;
+    t.substMap = h.newSubstMap;
+    e.newSubstMap = unify(t.type, listType(h.type), t.newSubstMap);
+
+    local newH :: Type = applySubstitution(h.type, e.newSubstMap);
+    local newT :: Type = applySubstitution(t.type, e.newSubstMap);
+
+    e.type = ^newT;
+
+    e.typeErrors <- case ^newT of
+    | listType(innerT) ->
+        if equalsType(^newH, ^innerT)
+        then []
+        else ["All elements of a list must match type"]
+    | _ -> ["Cannot cons with a non-list"]
+    end;
 }
 
 abstract production headExpr
@@ -59,20 +74,29 @@ e::Expr ::= e1::Expr
 {
     propagate env, typeEnv, typeErrors;
 
-    e.type = case e1.type of
-    | listType(someType) -> listType(^someType)
-    | _ -> errType()
-    end;
-
     e.value = case e1.value of
     | consVal(_, rest) -> ^rest
     | _ -> emptyListVal()
     end;
 
-    e.typeErrors <-
-        if equalsType(e.type, errType())
-        then ["Invalid type in 'tail' operation"]
-        else [];
+    e1.varID = e.varID;
+    e.newVarID = e1.newVarID + 1;
+
+    e1.substMap = e.substMap;
+    e.newSubstMap = unify(e1.type, listType(inferredType(e.newVarID - 1)), e1.newSubstMap);
+
+    local newType :: Type = applySubstitution(e1.type, e.newSubstMap);
+
+    e.type = case ^newType of
+    | listType(someType) -> listType(^someType)
+    | _ -> errType()
+    end;
+
+    e.typeErrors <- case newType of
+    | listType(_) -> []
+    | errType() -> []
+    | _ -> ["Invalid type in 'tail' operation"]
+    end;
 }
 
 abstract production nullExpr
@@ -80,14 +104,22 @@ e::Expr ::= e1::Expr
 {
     propagate env, typeEnv, typeErrors;
 
-    e.type = boolType();
-
     e.value = case e1.value of
     | emptyListVal() -> boolVal(true)
     | _ -> boolVal(false)
     end;
 
-    e.typeErrors <- case e1.type of
+    e1.varID = e.varID;
+    e.newVarID = e1.newVarID + 1;
+
+    e1.substMap = e.substMap;
+    e.newSubstMap = unify(e1.type, listType(inferredType(e.newVarID - 1)), e1.newSubstMap);
+
+    local newType :: Type = applySubstitution(e1.type, e.newSubstMap);
+
+    e.type = boolType();
+
+    e.typeErrors <- case newType of
     | listType(_) -> []
     | _ -> ["Cannot check nullity of non-list type"]
     end;
