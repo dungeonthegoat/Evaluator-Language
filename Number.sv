@@ -23,69 +23,125 @@ e::Expr ::= f::Float
 abstract production lessThanOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = boolType();
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '<' must be numbers"];
-  e.value = boolVal(getNum(l.value) < getNum(r.value));
+    e.value = boolVal(getNum(l.value) < getNum(r.value));
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.type = boolType();
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '<' must be numbers"];
 }
 
 abstract production greaterThanOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = boolType();
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '>' must be numbers"];
-  e.value = boolVal(getNum(l.value) > getNum(r.value));
+    e.value = boolVal(getNum(l.value) > getNum(r.value));
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.type = boolType();
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '>' must be numbers"];
 }
 
 abstract production lessThanEqOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = boolType();
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '<=' must be numbers"];
-  e.value = boolVal(getNum(l.value) <= getNum(r.value));
+    e.value = boolVal(getNum(l.value) <= getNum(r.value));
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.type = boolType();
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '<=' must be numbers"];
 }
 
 abstract production greaterThanEqOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = boolType();
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '>=' must be numbers"];
-  e.value = boolVal(getNum(l.value) >= getNum(r.value));
+    e.value = boolVal(getNum(l.value) >= getNum(r.value));
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.type = boolType();
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '>=' must be numbers"];
 }
 
 abstract production negOp
 e::Expr ::= e1::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  local typeMatchError :: [String] =
-    case e1.type of
-    | intType() -> []
-    | floatType() -> []
-    | errType() -> []
-    | _ -> ["Unable to negate non-number"]
-    end;
-  
-  e.type = 
-    case e1.type of
-    | intType() -> intType()
-    | floatType() -> floatType()
-    | _ -> errType()
-    end;
-  e.typeErrors <- typeMatchError;
-  e.value =
-    case e1.value of
-    | intVal(i) -> intVal(-i)
-    | floatVal(f) -> floatVal(-f)
-    | _ -> emptyListVal()
-    end;
+    e.value =
+        case e1.value of
+        | intVal(i) -> intVal(-i)
+        | floatVal(f) -> floatVal(-f)
+        | _ -> emptyListVal()
+        end;
+
+    e1.varID = e.varID;
+    e.newVarID = e1.newVarID;
+
+    e1.substMap = e.substMap;
+    e.newSubstMap = unify(e1.type, intType(), e1.newSubstMap);
+    local newType :: Type = applySubstitution(e1.type, e.newSubstMap);
+
+    local typeMatchError :: [String] =
+        case ^newType of
+        | intType() -> []
+        | floatType() -> []
+        | errType() -> []
+        | _ -> ["Unable to negate non-number"]
+        end;
+    
+    e.type = 
+        case ^newType of
+        | intType() -> intType()
+        | floatType() -> floatType()
+        | _ -> errType()
+        end;
+    e.typeErrors <- typeMatchError;
 }
 
 abstract production addOp

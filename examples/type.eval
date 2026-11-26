@@ -1,2 +1,2 @@
-let untyped f x y = x == y;
-f 1 2
+let untyped f x y = x <= -y;
+f 1 (-4)
