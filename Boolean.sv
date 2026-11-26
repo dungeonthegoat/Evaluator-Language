@@ -3,25 +3,40 @@ grammar evaluator;
 abstract production boolLit
 e::Expr ::= b::Boolean
 {
-  e.type = boolType();
-  e.value = boolVal(b);
+    e.type = boolType();
+    e.value = boolVal(b);
+
+    e.newVarID = e.varID;
+    e.newSubstMap = e.substMap;
 }
 
 -- Operators
 
 abstract production eqOp
-eq_e::Expr ::= l::Expr r::Expr
+e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  local unequalTypeError :: [String] = 
-    if equalsType(l.type, r.type)
-    then []
-    else ["Types do not match when comparing equality"];
-  
-  eq_e.typeErrors <- unequalTypeError;
-  eq_e.type = boolType();
-  eq_e.value = boolVal(equalsValue(l.value, r.value));
+    e.value = boolVal(equalsValue(l.value, r.value));
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, r.type, r.newSubstMap);
+
+    e.type = boolType();
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    local unequalTypeError :: [String] = 
+        if equalsType(^newL, ^newR)
+        then []
+        else ["Types do not match when comparing equality"];
+    e.typeErrors <- unequalTypeError;
 }
 
 abstract production ifThenElse

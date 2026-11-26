@@ -3,18 +3,21 @@ grammar evaluator;
 abstract production intLit
 e::Expr ::= i::Integer
 {
-  e.type = intType();
-  e.value = intVal(i);
+    e.type = intType();
+    e.value = intVal(i);
 
-  e.newVarID = e.varID;
-  e.newSubstMap = e.substMap;
+    e.newVarID = e.varID;
+    e.newSubstMap = e.substMap;
 }
 
 abstract production floatLit
 e::Expr ::= f::Float
 {
-  e.type = floatType();
-  e.value = floatVal(f);
+    e.type = floatType();
+    e.value = floatVal(f);
+
+    e.newVarID = e.varID;
+    e.newSubstMap = e.substMap;
 }
 
 abstract production lessThanOp
