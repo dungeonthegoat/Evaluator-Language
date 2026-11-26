@@ -61,8 +61,9 @@ e::Expr ::= b::Expr v1::Expr v2::Expr
 
     local newV1Type :: Type = applySubstitution(v1.type, e.newSubstMap);
     local newV2Type :: Type = applySubstitution(v2.type, e.newSubstMap);
+    local newBType :: Type = applySubstitution(b.type, e.newSubstMap);
     
-    local isBoolError :: [String] = case b.type of
+    local isBoolError :: [String] = case ^newBType of
     | boolType() -> []
     | errType() -> []
     | _ -> ["Cannot evaluate if/then/else of a non-boolean statement"]
