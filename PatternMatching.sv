@@ -58,17 +58,17 @@ c::MatchCases ::=
 abstract production consCases
 c::MatchCases ::= h::MatchCase t::MatchCases
 {
-  propagate env, typeEnv, matchingVal, matchingType, typeErrors;
+    propagate env, typeEnv, matchingVal, matchingType, typeErrors;
 
-  c.isMatch = h.isMatch || t.isMatch;
+    c.isMatch = h.isMatch || t.isMatch;
 
-  c.type = h.type;
-  c.value = if h.isMatch
-            then h.value
-            else t.value;
-  c.typeErrors <- if equalsType(h.type, t.type)
-                  then []
-                  else ["Attempted to match pattern with return type " ++ toStringType(h.type) ++ " and " ++ toStringType(t.type)];
+    c.type = h.type;
+    c.value = if h.isMatch
+                then h.value
+                else t.value;
+    c.typeErrors <- if equalsType(h.type, t.type)
+                    then []
+                    else ["Attempted to match pattern with return type " ++ toStringType(h.type) ++ " and " ++ toStringType(t.type)];
 }
 
 -- Patterns

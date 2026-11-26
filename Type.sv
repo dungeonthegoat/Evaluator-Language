@@ -248,20 +248,33 @@ Boolean ::= t1::Type t2::Type
 function toStringType
 String ::= t::Type
 {
-  return case t of
-  | intType() -> "int"
-  | floatType() -> "float"
-  | boolType() -> "bool"
-  | stringType() -> "string"
-  | errType() -> "error"
-  | listType(innerT) -> "[" ++ toStringType(^innerT) ++ "]"
-  | funcType(paramT, returnT) -> "(" ++ toStringType(^paramT) ++ " -> " ++ toStringType(^returnT) ++ ")"
-  | anyType() -> "any"
-  | tupleType(l, r) -> "(" ++ toStringType(^l) ++ ", " ++ toStringType(^r) ++ ")"
-  | customType(n) -> n
-  | inferredType(id) -> toString(id)
-  | _ -> "?"
-  end;
+    return case t of
+    | intType() -> "int"
+    | floatType() -> "float"
+    | boolType() -> "bool"
+    | stringType() -> "string"
+    | errType() -> "error"
+    | listType(innerT) -> "[" ++ toStringType(^innerT) ++ "]"
+    | funcType(paramT, returnT) -> "(" ++ toStringType(^paramT) ++ " -> " ++ toStringType(^returnT) ++ ")"
+    | anyType() -> "any"
+    | tupleType(l, r) -> "(" ++ toStringType(^l) ++ ", " ++ toStringType(^r) ++ ")"
+    | customType(n) -> n
+    | inferredType(id) -> toString(id)
+    | _ -> "?"
+    end;
+}
+
+function toStringTypeWithMapping
+String ::= t::Type m::[(Integer, String)]
+{
+    return case t of
+    | listType(innerT) -> "[" ++ toStringTypeWithMapping(^innerT, m) ++ "]"
+    | funcType(paramT, returnT) -> "(" ++ toStringTypeWithMapping(^paramT, m) ++ " -> " ++ toStringTypeWithMapping(^returnT, m) ++ ")"
+    | tupleType(l, r) -> "(" ++ toStringTypeWithMapping(^l, m) ++ ", " ++ toStringTypeWithMapping(^r, m) ++ ")"
+    | customType(n) -> n
+    | inferredType(id) -> getTypeLetter(m, id)
+    | _ -> toStringType(^t)
+    end;
 }
 
 @{- Turns each constructor into a funcType representing its constructor function's type, and returns the list of such constructor types -}
@@ -318,9 +331,55 @@ Value ::= constr::(String, [Type]) typeName::String env::[(String, Value)]
 function paramsOfTypeArgs
 [(String, Type)] ::= args::[Type] idx::Integer
 {
-  return case args of
-  | [] -> []
-  -- Dollar sign is added to prevent it from colliding with user-defined bindings
-  | t::ts -> ("$" ++ toString(idx), t) :: paramsOfTypeArgs(ts, idx + 1)
-  end;
+    return case args of
+    | [] -> []
+    -- Dollar sign is added to prevent it from colliding with user-defined bindings
+    | t::ts -> ("$" ++ toString(idx), t) :: paramsOfTypeArgs(ts, idx + 1)
+    end;
+}
+
+function getTypeLetter
+String ::= mapping::[(Integer, String)] id::Integer
+{
+    return case mapping of
+    | [] -> "?"
+    | (n, l)::_ when n == id -> l
+    | _::t -> getTypeLetter(t, id)
+    end;
+}
+
+function createLetterMapping
+[(Integer, String)] ::= ids::[Integer] letters::[String]
+{
+    return case ids, letters of
+    | [], [] -> []
+    | _, [] -> error("Not enough letters to name type variables")
+    | [], _ -> []
+    | id::idt, l::lt -> (id, l)::createLetterMapping(idt, lt)
+    end;
+}
+
+function findAllTypeIDs
+[(Integer, String)] ::= t::Type
+{
+    local letters :: [String] = [
+        "α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ", "λ", "μ",
+        "ν", "ξ", "ο", "π", "ρ", "σ", "τ", "υ", "φ", "χ", "ψ", "ω"
+    ];
+    
+    local uniqueTypeIDS :: [Integer] = nub(aggregateAllTypeIDs(^t));
+    local typeIDMapping :: [(Integer, String)] = createLetterMapping(uniqueTypeIDS, letters);
+    return typeIDMapping;
+}
+
+function aggregateAllTypeIDs
+[Integer] ::= t::Type
+{
+    return case t of
+    | inferredType(id) -> [id]
+    | listType(inner) -> aggregateAllTypeIDs(^inner)
+    | tupleType(l, r) -> aggregateAllTypeIDs(^l) ++ aggregateAllTypeIDs(^r)
+    | funcType(p, r) -> aggregateAllTypeIDs(^p) ++ aggregateAllTypeIDs(^r)
+    | _ -> []
+    end;
 }

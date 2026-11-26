@@ -1,5 +1,5 @@
 let untyped map f l =
     if null(l)
     then []
-    else (f (head(l))) :: tail(l);
+    else (f (head(l))) :: (map f (tail(l)));
 map

@@ -76,7 +76,8 @@ IO<Integer> ::= expr::String sourceName::String
             }
             else do {
                 print("=: " ++ toStringValue(ast.value) ++ "\n");
-                print("type: " ++ toStringType(ast.type) ++ "\n");
+                let mapping = findAllTypeIDs(ast.type);
+                print("type: " ++ toStringTypeWithMapping(ast.type, mapping) ++ "\n");
                 return 0;
             };
         }
