@@ -42,27 +42,41 @@ e::Expr ::= l::Expr r::Expr
 abstract production ifThenElse
 e::Expr ::= b::Expr v1::Expr v2::Expr
 {
-  propagate env, typeEnv, typeErrors;
-  
-  local isBoolError :: [String] = case b.type of
-  | boolType() -> []
-  | errType() -> []
-  | _ -> ["Cannot evaluate if/then/else of a non-boolean statement"]
-  end;
+    propagate env, typeEnv, typeErrors;
 
-  local matchTypesError :: [String] = case v1.type, v2.type of
-  | t1, t2 when equalsType(t1, t2) -> []
-  | _, errType() -> []
-  | errType(), _ -> []
-  | _, _ -> ["Types evaluated in 'then' and 'else' do not match"]
-  end;
+    e.value = case b.value of
+    | boolVal(bVal) -> if bVal then v1.value else v2.value
+    | _ -> error("Error evaluating if/then/else")
+    end;
 
-  e.type = v1.type;
-  e.typeErrors <- isBoolError ++ matchTypesError;
-  e.value = case b.value of
-  | boolVal(bVal) -> if bVal then v1.value else v2.value
-  | _ -> error("Error evaluating if/then/else")
-  end;
+    b.varID = e.varID;
+    v1.varID = b.newVarID;
+    v2.varID = v1.newVarID;
+    e.newVarID = v2.newVarID;
+
+    b.substMap = e.substMap;
+    v1.substMap = b.newSubstMap;
+    v2.substMap = v1.newSubstMap;
+    e.newSubstMap = unify(b.type, boolType(), unify(v1.type, v2.type, v2.newSubstMap));
+
+    local newV1Type :: Type = applySubstitution(v1.type, e.newSubstMap);
+    local newV2Type :: Type = applySubstitution(v2.type, e.newSubstMap);
+    
+    local isBoolError :: [String] = case b.type of
+    | boolType() -> []
+    | errType() -> []
+    | _ -> ["Cannot evaluate if/then/else of a non-boolean statement"]
+    end;
+
+    local matchTypesError :: [String] = case ^newV1Type, ^newV2Type of
+    | t1, t2 when equalsType(t1, t2) -> []
+    | _, errType() -> []
+    | errType(), _ -> []
+    | _, _ -> ["Types evaluated in 'then' and 'else' do not match"]
+    end;
+
+    e.type = ^newV1Type;
+    e.typeErrors <- isBoolError ++ matchTypesError;
 }
 
 abstract production andOp

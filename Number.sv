@@ -176,35 +176,59 @@ e::Expr ::= l::Expr r::Expr
 abstract production subOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '-' must be numbers"];
-  e.type = getBinaryArithmeticType(l.type, r.type);
-  e.value = 
-    case l.value, r.value of
-    | intVal(i1), intVal(i2) -> intVal(i1 - i2)
-    | floatVal(f1), floatVal(f2) -> floatVal(f1 - f2)
-    | floatVal(f1), intVal(i2) -> floatVal(f1 - toFloat(i2))
-    | intVal(i1), floatVal(f2) -> floatVal(toFloat(i1) - f2)
-    | _, _ -> emptyListVal()
-    end;
+    e.value = 
+        case l.value, r.value of
+        | intVal(i1), intVal(i2) -> intVal(i1 - i2)
+        | floatVal(f1), floatVal(f2) -> floatVal(f1 - f2)
+        | floatVal(f1), intVal(i2) -> floatVal(f1 - toFloat(i2))
+        | intVal(i1), floatVal(f2) -> floatVal(toFloat(i1) - f2)
+        | _, _ -> emptyListVal()
+        end;
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '-' must be numbers"];
+    e.type = getBinaryArithmeticType(^newL, ^newR);
 }
 
 abstract production mulOp
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.typeErrors <- if numTypesMatch(l.type, r.type) then [] else ["Both operands of '*' must be numbers"];
-  e.type = getBinaryArithmeticType(l.type, r.type);
-  e.value = 
-    case l.value, r.value of
-    | intVal(i1), intVal(i2) -> intVal(i1 * i2)
-    | floatVal(f1), floatVal(f2) -> floatVal(f1 * f2)
-    | floatVal(f1), intVal(i2) -> floatVal(f1 * toFloat(i2))
-    | intVal(i1), floatVal(f2) -> floatVal(toFloat(i1) * f2)
-    | _, _ -> emptyListVal()
-    end;
+    e.value = 
+        case l.value, r.value of
+        | intVal(i1), intVal(i2) -> intVal(i1 * i2)
+        | floatVal(f1), floatVal(f2) -> floatVal(f1 * f2)
+        | floatVal(f1), intVal(i2) -> floatVal(f1 * toFloat(i2))
+        | intVal(i1), floatVal(f2) -> floatVal(toFloat(i1) * f2)
+        | _, _ -> emptyListVal()
+        end;
+
+    l.varID = e.varID;
+    r.varID = l.newVarID;
+    e.newVarID = r.newVarID;
+
+    l.substMap = e.substMap;
+    r.substMap = l.newSubstMap;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.typeErrors <- if numTypesMatch(^newL, ^newR) then [] else ["Both operands of '*' must be numbers"];
+    e.type = getBinaryArithmeticType(^newL, ^newR);
 }
 
 abstract production divOp
