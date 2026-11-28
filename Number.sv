@@ -161,11 +161,11 @@ e::Expr ::= l::Expr r::Expr
     l.varID = e.varID;
     r.varID = l.newVarID;
     e.newVarID = r.newVarID;
-
+    
     l.substMap = e.substMap;
     r.substMap = l.newSubstMap;
     e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
-
+    
     local newL :: Type = applySubstitution(l.type, e.newSubstMap);
     local newR :: Type = applySubstitution(r.type, e.newSubstMap);
 

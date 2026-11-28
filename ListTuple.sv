@@ -144,17 +144,30 @@ e::Expr ::= l::Expr r::Expr
 abstract production listCompExpr
 e::Expr ::= l::Expr r::Expr
 {
-  propagate env, typeEnv, typeErrors;
+    propagate env, typeEnv, typeErrors;
 
-  e.type = listType(intType());
-  e.value = constructIntList(constructCompList(getInt(l.value), getInt(r.value)));
+    e.value = constructIntList(constructCompList(getInt(l.value), getInt(r.value)));
 
-  e.typeErrors <- case l.type, r.type of
-  | intType(), intType() -> []
-  | errType(), _ -> []
-  | _, errType() -> []
-  | _, _ -> ["Invalid types in list comprehension"]
-  end;
+    l.varID = e.varID;
+    l.substMap = e.substMap;
+
+    r.varID = l.newVarID;
+    r.substMap = l.newSubstMap;
+
+    e.newVarID = r.newVarID;
+    e.newSubstMap = unify(l.type, intType(), unify(r.type, intType(), r.newSubstMap));
+
+    local newL :: Type = applySubstitution(l.type, e.newSubstMap);
+    local newR :: Type = applySubstitution(r.type, e.newSubstMap);
+
+    e.type = listType(intType());
+    
+    e.typeErrors <- case ^newL, ^newR of
+    | intType(), intType() -> []
+    | errType(), _ -> []
+    | _, errType() -> []
+    | _, _ -> ["Invalid types in list comprehension"]
+    end;
 }
 
 abstract production tupleExpr

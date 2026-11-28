@@ -17,16 +17,22 @@ e::Expr ::= name::String
 abstract production letExpr
 e::Expr ::= name::String e1::Expr e2::Expr
 {
-  propagate typeErrors;
-  
-  e1.env = e.env;
-  e2.env = e.env ++ [(name, e1.value)];
+    propagate typeErrors;
+    
+    e1.env = e.env;
+    e1.typeEnv = e.typeEnv;
+    e1.varID = e.varID;
+    e1.substMap = e.substMap;
 
-  e1.typeEnv = e.typeEnv;
-  e2.typeEnv = e.typeEnv ++ [(name, e1.type)];
+    e2.env = e.env ++ [(name, e1.value)];
+    e2.typeEnv = e.typeEnv ++ [(name, e1.type)];
+    e2.varID = e1.newVarID;
+    e2.substMap = e1.newSubstMap;
 
-  e.type = e2.type;
-  e.value = e2.value;
+    e.type = e2.type;
+    e.value = e2.value;
+    e.newVarID = e2.newVarID;
+    e.newSubstMap = e2.newSubstMap;
 }
 
 -- Concrete syntax
