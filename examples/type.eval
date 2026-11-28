@@ -1,9 +1,9 @@
-let untyped map f l =
+let map f l =
     if null l
     then []
     else f head l :: map f tail l;
 
-let untyped filter f l =
+let filter f l =
     if null l
     then []
     else
@@ -11,13 +11,15 @@ let untyped filter f l =
         then head l :: filter f tail l
         else filter f tail l ;
 
-let untyped foldr f l i =
+let foldr f l i =
     if null l
     then i
     else f (head l) (foldr f (tail l) i);
 
-let untyped add x y = x + y;
+let add x y = x + y;
 
 let nums = [1...10];
 
-filter
+let neg x = -x;
+
+map neg nums

@@ -147,11 +147,11 @@ e::Expr_c ::= Lambda param::Var Colon t::Type_c Arrow body::Expr_c
 -- Untyped function, names.head represents the function name,
 -- the rest are parameter names
 concrete production untyped_func
-e::Expr_c ::= Let Inf names::VarList_c Eq body::Expr_c In rest::Expr_c
+e::Expr_c ::= Let name::Var params::VarList_c Eq body::Expr_c In rest::Expr_c
 {
     e.ast = untypedFunction(
-        head(names.untyped_vars),
-        tail(names.untyped_vars),
+        name.lexeme,
+        params.untyped_vars,
         body.ast,
         rest.ast
     );
